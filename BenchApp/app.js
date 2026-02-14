@@ -100,6 +100,8 @@ const App = {
     } else if (this.currentDay !== null) {
       this.showWeeks();
     } else if (this.currentCycleId !== null) {
+      this.showWeeks();
+    } else {
       this.showCycles();
     }
   },

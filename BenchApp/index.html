@@ -20,12 +20,14 @@
       <h1>BENCH 100</h1>
       <p class="subtitle">ЖАТЬ ИЛИ УМЕРЕТЬ</p>
     </div>
-    <div class="content" id="cycles-list">
-      <!-- Список проходок генерируется в JS -->
-    </div>
-    <div class="backup-row">
-      <button class="btn-backup" onclick="App.exportData()">&#128190; Сохранить бэкап</button>
-      <button class="btn-backup btn-backup-import" onclick="App.importData()">&#128194; Загрузить бэкап</button>
+    <div class="content" id="cycles-content">
+      <div id="cycles-list">
+        <!-- Список проходок генерируется в JS -->
+      </div>
+      <div class="backup-row">
+        <button class="btn-backup" onclick="App.exportData()">&#128190; Сохранить бэкап</button>
+        <button class="btn-backup btn-backup-import" onclick="App.importData()">&#128194; Загрузить бэкап</button>
+      </div>
     </div>
     <input type="file" id="import-file" accept=".json" style="display:none" onchange="App.handleImport(event)">
     <button class="btn-add" id="btn-add-cycle" onclick="App.showAddCycle()">+ Новая проходка</button>
