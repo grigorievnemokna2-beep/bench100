@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bench100">
+  <meta name="theme-color" content="#060608">
+  <title>Bench 100 - Жим лежа</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ ЭКРАН: СПИСОК ПРОХОДОК ============ -->
+  <div id="screen-cycles" class="screen active">
+    <div class="header">
+      <h1>BENCH 100</h1>
+      <p class="subtitle">ЖАТЬ ИЛИ УМЕРЕТЬ</p>
+    </div>
+    <div class="content" id="cycles-list">
+      <!-- Список проходок генерируется в JS -->
+    </div>
+    <div class="backup-row">
+      <button class="btn-backup" onclick="App.exportData()">&#128190; Сохранить бэкап</button>
+      <button class="btn-backup btn-backup-import" onclick="App.importData()">&#128194; Загрузить бэкап</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="App.handleImport(event)">
+    <button class="btn-add" id="btn-add-cycle" onclick="App.showAddCycle()">+ Новая проходка</button>
+  </div>
+
+  <!-- ============ ЭКРАН: СОЗДАНИЕ ПРОХОДКИ ============ -->
+  <div id="screen-add-cycle" class="screen">
+    <div class="header">
+      <button class="btn-back" onclick="App.goBack()">&larr;</button>
+      <h1>Новая проходка</h1>
+    </div>
+    <div class="content form-content">
+      <label class="form-label">Название проходки</label>
+      <input type="text" id="cycle-name" class="form-input" placeholder="Например: Первая проходка" value="Проходка">
+
+      <label class="form-label">Твой максимум жима лежа (кг)</label>
+      <input type="number" id="cycle-max" class="form-input big-input" placeholder="62.5" step="0.5" inputmode="decimal">
+
+      <p class="form-hint">Все веса в базовых упражнениях будут рассчитаны автоматически от этой цифры.</p>
+
+      <button class="btn-primary" onclick="App.createCycle()">Создать проходку</button>
+    </div>
+  </div>
+
+  <!-- ============ ЭКРАН: ОБЗОР ПРОХОДКИ (НЕДЕЛИ) ============ -->
+  <div id="screen-weeks" class="screen">
+    <div class="header">
+      <button class="btn-back" onclick="App.showCycles()">&larr;</button>
+      <h1 id="weeks-title">Проходка</h1>
+      <button class="btn-icon" onclick="App.showProgress()" title="Прогресс"><svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="12" width="4" height="8" rx="1.2" fill="currentColor" opacity=".45"/><rect x="9" y="6" width="4" height="14" rx="1.2" fill="currentColor" opacity=".7"/><rect x="16" y="2" width="4" height="18" rx="1.2" fill="currentColor"/></svg></button>
+    </div>
+    <div class="cycle-info">
+      <span class="max-badge" id="max-badge">Макс: 62.5 кг</span>
+      <button class="btn-small" onclick="App.editMax()">Изменить</button>
+    </div>
+    <div class="content" id="weeks-list">
+      <!-- Список недель -->
+    </div>
+  </div>
+
+  <!-- ============ ЭКРАН: ДЕНЬ ТРЕНИРОВКИ ============ -->
+  <div id="screen-day" class="screen">
+    <div class="header">
+      <button class="btn-back" onclick="App.showWeeks()">&larr;</button>
+      <h1 id="day-title">Неделя 1 - Пн</h1>
+    </div>
+    <div class="content" id="exercises-list">
+      <!-- Список упражнений -->
+    </div>
+  </div>
+
+  <!-- ============ ЭКРАН: УПРАЖНЕНИЕ (ПОДХОДЫ) ============ -->
+  <div id="screen-exercise" class="screen">
+    <div class="header">
+      <button class="btn-back" onclick="App.showDay()">&larr;</button>
+      <h1 id="exercise-title" class="exercise-header" onclick="App.editExerciseName()">Жим штанги лежа</h1>
+    </div>
+    <div id="exercise-badge-area" class="exercise-badge-area"></div>
+    <div class="content" id="sets-list">
+      <!-- Подходы -->
+    </div>
+    <!-- Таймер -->
+    <div id="timer-section" class="timer-section">
+      <div class="timer-display" id="timer-display" onclick="App.editTimerManual()">0:00</div>
+      <div class="timer-adjust">
+        <button class="timer-adj-btn" onclick="App.adjustTimer(-30)">-30</button>
+        <button class="timer-adj-btn" onclick="App.adjustTimer(-15)">-15</button>
+        <button class="timer-adj-btn" onclick="App.adjustTimer(-5)">-5</button>
+        <button class="timer-adj-btn plus" onclick="App.adjustTimer(5)">+5</button>
+        <button class="timer-adj-btn plus" onclick="App.adjustTimer(15)">+15</button>
+        <button class="timer-adj-btn plus" onclick="App.adjustTimer(30)">+30</button>
+      </div>
+      <div class="timer-controls">
+        <button class="timer-btn" onclick="App.setTimer(60)">1:00</button>
+        <button class="timer-btn" onclick="App.setTimer(90)">1:30</button>
+        <button class="timer-btn" onclick="App.setTimer(120)">2:00</button>
+        <button class="timer-btn" onclick="App.setTimer(180)">3:00</button>
+        <button class="timer-btn" onclick="App.setTimer(300)">5:00</button>
+      </div>
+      <div class="timer-actions">
+        <button class="btn-timer-start" id="btn-timer-toggle" onclick="App.toggleTimer()">Старт</button>
+        <button class="btn-timer-reset" onclick="App.resetTimer()">Сброс</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ЭКРАН: ПРОГРЕСС ============ -->
+  <div id="screen-progress" class="screen">
+    <div class="header">
+      <button class="btn-back" onclick="App.showWeeks()">&larr;</button>
+      <h1>Прогресс</h1>
+    </div>
+    <div class="content" id="progress-content">
+      <!-- Прогресс -->
+    </div>
+  </div>
+
+  <!-- ============ МОДАЛЬНОЕ ОКНО: ВВОД ВЕСА ============ -->
+  <div id="modal-weight" class="modal hidden">
+    <div class="modal-overlay" onclick="App.closeModal()"></div>
+    <div class="modal-content">
+      <h3 id="modal-weight-title">Введи вес (кг)</h3>
+      <input type="number" id="modal-weight-input" class="form-input big-input" step="0.5" inputmode="decimal">
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="App.closeModal()">Отмена</button>
+        <button class="btn-primary" onclick="App.saveWeight()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ МОДАЛЬНОЕ ОКНО: ИЗМЕНИТЬ МАКСИМУМ ============ -->
+  <div id="modal-max" class="modal hidden">
+    <div class="modal-overlay" onclick="App.closeModal()"></div>
+    <div class="modal-content">
+      <h3>Новый максимум (кг)</h3>
+      <input type="number" id="modal-max-input" class="form-input big-input" step="0.5" inputmode="decimal">
+      <p class="form-hint">Все веса будут пересчитаны.</p>
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="App.closeModal()">Отмена</button>
+        <button class="btn-primary" onclick="App.saveNewMax()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ИМЕНИ ============ -->
+  <div id="modal-name" class="modal hidden">
+    <div class="modal-overlay" onclick="App.closeModal()"></div>
+    <div class="modal-content">
+      <h3>Название упражнения</h3>
+      <input type="text" id="modal-name-input" class="form-input" placeholder="Введи название">
+      <p class="form-hint">Изменение только для этой проходки.</p>
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="App.closeModal()">Отмена</button>
+        <button class="btn-primary" onclick="App.saveExerciseName()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ МОДАЛЬНОЕ ОКНО: ВВОД ВРЕМЕНИ ТАЙМЕРА ============ -->
+  <div id="modal-timer" class="modal hidden">
+    <div class="modal-overlay" onclick="App.closeModal()"></div>
+    <div class="modal-content">
+      <h3>Время отдыха (сек)</h3>
+      <input type="number" id="modal-timer-input" class="form-input big-input" step="5" inputmode="numeric" placeholder="120">
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="App.closeModal()">Отмена</button>
+        <button class="btn-primary" onclick="App.saveTimerManual()">Установить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ МОДАЛЬНОЕ ОКНО: ИНФО ПО УПРАЖНЕНИЮ ============ -->
+  <div id="modal-info" class="modal hidden">
+    <div class="modal-overlay" onclick="App.closeModal()"></div>
+    <div class="modal-content">
+      <h3 id="modal-info-title">Упражнение</h3>
+      <div id="modal-info-body"></div>
+      <div class="modal-buttons">
+        <button class="btn-primary" onclick="App.closeModal()">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Звук таймера -->
+  <audio id="timer-sound" preload="auto">
+    <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2LkpONgHBibXiGjo+KfG1hanWEjo2HemxiaHWFj46HemxiaHaFj46HemtkZnOCjI2IfG5kZ3OCjIyHfG5kZ3SCjIyHfG5kZ3SCjIyHfG5kZ3SDjY2IfG5kZ3SDjY2IfG5lZ3SDjY2IfG5lZ3WDjY2IfG5lZ3WEjY2IfG5lZ3WEjY6IfG5lZ3WEjo6JfW9mZ3WEjo6JfW9mZ3WEjo6JfW9maHaFjo6JfXBnaHaFj4+KfnFoaXeGj4+KfnFoaXeGkJCKf3JpaneHkJCLf3JpaneHkJCLgHNqaneHkZGLgHNqa3iIkZGLgHNqa3iIkZGMgXRra3iIkpKMgXRra3mJkpKMgXRrbHmJk5ONgnVsbHmJk5ONgnVsbHmKk5ONgnVsbHqKlJSOg3ZtbXqKlJSOg3ZtbXqLlJSOg3dtbXqLlZWPhHdubXuLlZWPhHdubXuLlZWPhHdubXuMlpaQhXhvbnuMlpaQhXhvbnuMlpaQhXhvb3yNl5eRhXlwb3yNl5eRhnlwb3yNl5eRhnpwcH2Ol5iShnpwcH2Ol5iShnpwcH2OmJiSh3txcH2OmJiTh3txcX6PmJmTh3txcX6PmZmTiHxxcX6PmZmUiHxxcX+QmZqUiH1ycX+QmpqUiH1ycn+QmpqUiX1ycn+RmpuViX5zcn+RmpuViX5zcn+Rm5uVin5zc4CSm5yWin50c4CSm5yWin50c4CSnJyWi390c4CSnJyXi390dIGTnJ2Xi4B0dIGTnJ2Xi4B0dIGTnZ2XjIB1dYGUnZ6YjIB1dYGUnZ6YjIF1dYKUnZ6YjIF1dYKVnp+ZjYF2doKVnp+ZjYF2doKVnp+ZjYJ2doKVn5+ZjYJ2doOWn6CajYJ3doOWn6CajoJ3d4OWoKCajoN3d4OXoKGbjoN3d4OXoKGbjoN4d4SXoKGbj4N4eISYoaKcj4R4eISYoaKcj4R4eISYoaKcj4R5eISZoqOdkIR5eIWZoqOdkIV5eYWZoqOdkIV5eYWZo6SdkIV5eYWao6SekIV6eYaao6SekYZ6eYaao6WekYZ6eoaao6WfkYZ6eoabpKWfkod6eoabpKafkod7eoabpKafkod7eoabpKafk4d7e4ecpaefk4d7e4ecpaefk4h7e4ecpaeflIh7e4ecpqiglIh8e4idpqiglIl8fIidpqiglIl8fIidp6mhlIl8fIidp6mhlIl8fImdp6mhlYl9fImdp6mhlYp9fImd" type="audio/wav">
+  </audio>
+
+  <script src="program-data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Регистрация Service Worker для офлайн-работы
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+</body>
+</html>
