@@ -2,7 +2,7 @@
 // Service Worker — кэширует файлы для работы офлайн
 // ============================================================
 
-const CACHE_NAME = 'bench100-v14';
+const CACHE_NAME = 'bench100-v15';
 const URLS_TO_CACHE = [
   './',
   './index.html',
@@ -30,9 +30,15 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Запросы: сначала кэш, потом сеть
+// Запросы: сначала сеть, потом кэш (network-first)
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    fetch(event.request)
+      .then(response => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
