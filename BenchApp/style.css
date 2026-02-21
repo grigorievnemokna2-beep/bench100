@@ -343,6 +343,19 @@ body {
   letter-spacing: 1px;
   text-transform: uppercase;
 }
+.bar-badge {
+  background: var(--surface);
+  color: var(--t2);
+  padding: 7px 14px;
+  border-radius: var(--r-pill);
+  font-family: 'Oswald', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.bar-badge:active { opacity: 0.5; }
 
 /* ============ CYCLE CARDS ============ */
 .cycle-card {
@@ -737,6 +750,13 @@ body {
   font-size: 13px;
   color: var(--t2);
   margin-top: 1px;
+}
+.set-plate-hint {
+  font-size: 11px;
+  color: var(--accent);
+  opacity: 0.8;
+  margin-top: 1px;
+  font-weight: 600;
 }
 
 /* Checkmark — белый круг, чёрная галочка */

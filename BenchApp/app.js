@@ -17,6 +17,7 @@ const App = {
   timerSeconds: 0,
   timerRunning: false,
   timerTarget: 0,
+  timerEndAt: null,  // timestamp когда таймер закончится
 
   // Модальное окно
   modalCallback: null,
@@ -28,6 +29,24 @@ const App = {
   init() {
     this.loadData();
     this.showCycles();
+
+    // Восстановление таймера при возврате в приложение
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && this.timerRunning && this.timerEndAt) {
+        const remaining = Math.ceil((this.timerEndAt - Date.now()) / 1000);
+        if (remaining <= 0) {
+          this.timerSeconds = 0;
+          clearInterval(this.timerInterval);
+          this.timerRunning = false;
+          this.timerEndAt = null;
+          this.updateTimerDisplay();
+          this.timerFinished();
+        } else {
+          this.timerSeconds = remaining;
+          this.updateTimerDisplay();
+        }
+      }
+    });
   },
 
   // ==================== ДАННЫЕ ====================
@@ -37,8 +56,9 @@ const App = {
     if (raw) {
       this.data = JSON.parse(raw);
     } else {
-      this.data = { cycles: [] };
+      this.data = { cycles: [], barWeight: 20 };
     }
+    if (this.data.barWeight === undefined) this.data.barWeight = 20;
   },
 
   // Сохранение данных в localStorage
@@ -85,6 +105,26 @@ const App = {
     };
     reader.readAsText(file);
     event.target.value = '';
+  },
+
+  // ==================== ВЕС НА СТОРОНУ ====================
+  getPerSide(weight) {
+    const bar = this.data.barWeight || 20;
+    const perSide = (weight - bar) / 2;
+    if (perSide <= 0) return null;
+    return Math.round(perSide * 100) / 100;
+  },
+
+  editBarWeight() {
+    const current = this.data.barWeight || 20;
+    const val = prompt('Вес грифа (кг):', current);
+    if (val === null) return;
+    const w = parseFloat(val);
+    if (!w || w <= 0) return;
+    this.data.barWeight = w;
+    this.saveData();
+    if (this.currentExIndex !== null) this.renderSets();
+    else this.showWeeks();
   },
 
   // ==================== НАВИГАЦИЯ ====================
@@ -217,6 +257,7 @@ const App = {
 
     document.getElementById('weeks-title').textContent = cycle.name;
     document.getElementById('max-badge').textContent = `Макс: ${cycle.maxWeight} кг`;
+    document.getElementById('bar-badge').textContent = `Гриф: ${this.data.barWeight || 20} кг`;
     this.renderWeeks();
   },
 
@@ -447,6 +488,9 @@ const App = {
         const weight = overrideWeight !== null ? overrideWeight : calcWeight;
         const isOverridden = overrideWeight !== null;
 
+        const perSide = this.getPerSide(weight);
+        const perSideHtml = perSide !== null ? `<div class="set-plate-hint">по ${perSide} кг/сторону</div>` : '';
+
         html += `
           <div class="set-row">
             <div class="set-number">${setNum}</div>
@@ -455,6 +499,7 @@ const App = {
                 ${weight} кг <small>(${seg.percent}%)</small>
                 ${isOverridden ? '<small class="override-mark">изм.</small>' : ''}
               </div>
+              ${perSideHtml}
               <div class="set-reps">${seg.reps} повторений</div>
             </div>
             <button class="set-check ${doneClass}" onclick="App.toggleSet(${setNum - 1})">
@@ -479,6 +524,9 @@ const App = {
         ? saved.setWeights[i]
         : (saved && saved.weight ? saved.weight : null);
 
+      const perSide = setWeight ? this.getPerSide(setWeight) : null;
+      const perSideHtml = perSide !== null ? `<div class="set-plate-hint">по ${perSide} кг/сторону</div>` : '';
+
       html += `
         <div class="set-row ${done ? 'set-done' : ''}">
           <div class="set-number">${i + 1}</div>
@@ -486,6 +534,7 @@ const App = {
             <div class="set-weight individual" onclick="App.showSetWeightInput(${i}, ${isSuperset})">
               ${setWeight ? setWeight + ' кг' : 'Указать вес'}
             </div>
+            ${perSideHtml}
             <div class="set-reps">${ex.reps} повторений</div>
           </div>
           <button class="set-check ${doneClass}" onclick="App.toggleSet(${i}, ${isSuperset})">
@@ -951,6 +1000,7 @@ const App = {
     this.timerTarget = seconds;
     this.timerSeconds = seconds;
     this.timerRunning = false;
+    this.timerEndAt = null;
     clearInterval(this.timerInterval);
 
     this.updateTimerDisplay();
@@ -969,9 +1019,11 @@ const App = {
 
   toggleTimer() {
     if (this.timerRunning) {
-      // Пауза
+      // Пауза — запоминаем оставшееся время
       this.timerRunning = false;
+      this.timerEndAt = null;
       clearInterval(this.timerInterval);
+      // timerSeconds уже актуален
       const btn = document.getElementById('btn-timer-toggle');
       btn.textContent = 'Старт';
       btn.classList.remove('running');
@@ -981,33 +1033,37 @@ const App = {
         this.timerSeconds = this.timerTarget;
       }
       if (this.timerSeconds <= 0) {
-        this.timerSeconds = 120; // 2 мин по умолчанию
+        this.timerSeconds = 120;
         this.timerTarget = 120;
       }
 
       this.timerRunning = true;
+      this.timerEndAt = Date.now() + this.timerSeconds * 1000;
       const btn = document.getElementById('btn-timer-toggle');
       btn.textContent = 'Пауза';
       btn.classList.add('running');
 
       this.timerInterval = setInterval(() => {
-        this.timerSeconds--;
+        const remaining = Math.ceil((this.timerEndAt - Date.now()) / 1000);
+        this.timerSeconds = Math.max(0, remaining);
         this.updateTimerDisplay();
 
         if (this.timerSeconds <= 0) {
           clearInterval(this.timerInterval);
           this.timerRunning = false;
+          this.timerEndAt = null;
           btn.textContent = 'Старт';
           btn.classList.remove('running');
           this.timerFinished();
         }
-      }, 1000);
+      }, 250);
     }
   },
 
   resetTimer() {
     clearInterval(this.timerInterval);
     this.timerRunning = false;
+    this.timerEndAt = null;
     this.timerSeconds = this.timerTarget || 0;
     this.updateTimerDisplay();
 
@@ -1073,7 +1129,9 @@ const App = {
   // ==================== УПРАВЛЕНИЕ ТАЙМЕРОМ ====================
   adjustTimer(seconds) {
     this.timerSeconds = Math.max(0, this.timerSeconds + seconds);
-    if (!this.timerRunning) {
+    if (this.timerRunning) {
+      this.timerEndAt = Date.now() + this.timerSeconds * 1000;
+    } else {
       this.timerTarget = this.timerSeconds;
     }
     this.updateTimerDisplay();
