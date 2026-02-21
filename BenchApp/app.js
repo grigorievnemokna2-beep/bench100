@@ -471,6 +471,85 @@ const App = {
     container.innerHTML = html;
   },
 
+  // Получить фактические повторения для подхода
+  getActualReps(saved, setIdx, targetReps) {
+    if (saved && saved.sets && saved.sets[setIdx] && saved.sets[setIdx].actualReps !== undefined) {
+      return saved.sets[setIdx].actualReps;
+    }
+    return null;
+  },
+
+  // HTML для отображения повторений (кликабельно)
+  repsHtml(setIdx, targetReps, actualReps, isSuperset = false) {
+    if (actualReps !== null && actualReps !== targetReps) {
+      return `<div class="set-reps editable" onclick="App.editReps(${setIdx}, ${targetReps}, ${isSuperset})"><span class="reps-actual">${actualReps}</span><span class="reps-target">/${targetReps}</span> повт.</div>`;
+    }
+    return `<div class="set-reps editable" onclick="App.editReps(${setIdx}, ${targetReps}, ${isSuperset})">${targetReps} повторений</div>`;
+  },
+
+  editReps(setIdx, targetReps, isSuperset = false) {
+    const cycle = this.getCycle();
+    const workoutKey = `${this.currentWeek}-${this.currentDay}`;
+    const workout = cycle.workouts ? cycle.workouts[workoutKey] : null;
+    const exData = workout && workout.exercises ? workout.exercises[this.currentExIndex] : null;
+    const setData = isSuperset
+      ? (exData && exData.superset && exData.superset.sets ? exData.superset.sets[setIdx] : null)
+      : (exData && exData.sets ? exData.sets[setIdx] : null);
+    const current = setData && setData.actualReps !== undefined ? setData.actualReps : targetReps;
+
+    document.getElementById('modal-reps-input').value = current;
+    document.getElementById('modal-reps-target').textContent = `Цель: ${targetReps}`;
+    this._repsSetIdx = setIdx;
+    this._repsIsSuperset = isSuperset;
+    document.getElementById('modal-reps').classList.remove('hidden');
+    setTimeout(() => {
+      const inp = document.getElementById('modal-reps-input');
+      inp.focus();
+      inp.select();
+    }, 100);
+  },
+
+  saveReps() {
+    const val = parseInt(document.getElementById('modal-reps-input').value);
+    if (isNaN(val) || val < 0) return;
+
+    const setIdx = this._repsSetIdx;
+    const isSuperset = this._repsIsSuperset;
+    const cycle = this.getCycle();
+    const workoutKey = `${this.currentWeek}-${this.currentDay}`;
+
+    if (!cycle.workouts) cycle.workouts = {};
+    if (!cycle.workouts[workoutKey]) {
+      cycle.workouts[workoutKey] = { exercises: {}, date: new Date().toISOString(), completed: false };
+    }
+    const workout = cycle.workouts[workoutKey];
+    if (!workout.exercises) workout.exercises = {};
+    const exKey = this.currentExIndex;
+    if (!workout.exercises[exKey]) {
+      workout.exercises[exKey] = { sets: {}, completedSets: 0 };
+    }
+
+    const exData = isSuperset
+      ? (workout.exercises[exKey].superset || (workout.exercises[exKey].superset = { sets: {}, completedSets: 0 }))
+      : workout.exercises[exKey];
+
+    if (!exData.sets) exData.sets = {};
+    if (!exData.sets[setIdx]) exData.sets[setIdx] = {};
+    exData.sets[setIdx].actualReps = val;
+
+    // Автоматически отметить подход выполненным если ввели повторения
+    if (val > 0 && !exData.sets[setIdx].done) {
+      exData.sets[setIdx].done = true;
+      exData.sets[setIdx].timestamp = new Date().toISOString();
+      exData.completedSets = Object.values(exData.sets).filter(s => s.done).length;
+      this.checkWorkoutCompletion(workout);
+    }
+
+    this.saveData();
+    this.closeModal();
+    this.renderSets();
+  },
+
   renderPercentSets(ex, saved, maxWeight) {
     let html = '';
     let setNum = 0;
@@ -490,6 +569,7 @@ const App = {
 
         const perSide = this.getPerSide(weight);
         const perSideHtml = perSide !== null ? `<div class="set-plate-hint">по ${perSide} кг/сторону</div>` : '';
+        const actualReps = this.getActualReps(saved, setNum - 1, seg.reps);
 
         html += `
           <div class="set-row">
@@ -500,7 +580,7 @@ const App = {
                 ${isOverridden ? '<small class="override-mark">изм.</small>' : ''}
               </div>
               ${perSideHtml}
-              <div class="set-reps">${seg.reps} повторений</div>
+              ${this.repsHtml(setNum - 1, seg.reps, actualReps, false)}
             </div>
             <button class="set-check ${doneClass}" onclick="App.toggleSet(${setNum - 1})">
               ${done ? '&#10003;' : ''}
@@ -519,13 +599,13 @@ const App = {
     for (let i = 0; i < ex.sets; i++) {
       const done = saved && saved.sets && saved.sets[i] && saved.sets[i].done;
       const doneClass = done ? 'done' : '';
-      // Вес для каждого подхода отдельно
       const setWeight = saved && saved.setWeights && saved.setWeights[i] !== undefined
         ? saved.setWeights[i]
         : (saved && saved.weight ? saved.weight : null);
 
       const perSide = setWeight ? this.getPerSide(setWeight) : null;
       const perSideHtml = perSide !== null ? `<div class="set-plate-hint">по ${perSide} кг/сторону</div>` : '';
+      const actualReps = this.getActualReps(saved, i, ex.reps);
 
       html += `
         <div class="set-row ${done ? 'set-done' : ''}">
@@ -535,7 +615,7 @@ const App = {
               ${setWeight ? setWeight + ' кг' : 'Указать вес'}
             </div>
             ${perSideHtml}
-            <div class="set-reps">${ex.reps} повторений</div>
+            ${this.repsHtml(i, ex.reps, actualReps, isSuperset)}
           </div>
           <button class="set-check ${doneClass}" onclick="App.toggleSet(${i}, ${isSuperset})">
             ${done ? '&#10003;' : ''}
@@ -553,13 +633,14 @@ const App = {
     for (let i = 0; i < ex.sets; i++) {
       const done = saved && saved.sets && saved.sets[i] && saved.sets[i].done;
       const doneClass = done ? 'done' : '';
+      const actualReps = this.getActualReps(saved, i, ex.reps);
 
       html += `
         <div class="set-row">
           <div class="set-number">${i + 1}</div>
           <div class="set-info">
             <div class="set-weight" style="color: var(--text-dim)">Без веса</div>
-            <div class="set-reps">${ex.reps} повторений</div>
+            ${this.repsHtml(i, ex.reps, actualReps, isSuperset)}
           </div>
           <button class="set-check ${doneClass}" onclick="App.toggleSet(${i}, ${isSuperset})">
             ${done ? '&#10003;' : ''}

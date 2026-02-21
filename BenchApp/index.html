@@ -180,6 +180,20 @@
     </div>
   </div>
 
+  <!-- ============ МОДАЛЬНОЕ ОКНО: ВВОД ПОВТОРЕНИЙ ============ -->
+  <div id="modal-reps" class="modal hidden">
+    <div class="modal-overlay" onclick="App.closeModal()"></div>
+    <div class="modal-content">
+      <h3>Сколько повторений сделал?</h3>
+      <p class="form-hint" id="modal-reps-target">Цель: 8</p>
+      <input type="number" id="modal-reps-input" class="form-input big-input" step="1" inputmode="numeric" min="0">
+      <div class="modal-buttons">
+        <button class="btn-secondary" onclick="App.closeModal()">Отмена</button>
+        <button class="btn-primary" onclick="App.saveReps()">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ МОДАЛЬНОЕ ОКНО: ИНФО ПО УПРАЖНЕНИЮ ============ -->
   <div id="modal-info" class="modal hidden">
     <div class="modal-overlay" onclick="App.closeModal()"></div>

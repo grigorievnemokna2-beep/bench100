@@ -758,6 +758,21 @@ body {
   margin-top: 1px;
   font-weight: 600;
 }
+.set-reps.editable {
+  cursor: pointer;
+  border-bottom: 1px dashed var(--line);
+  display: inline-block;
+}
+.set-reps.editable:active { opacity: 0.5; }
+.reps-actual {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+}
+.reps-target {
+  color: var(--t3);
+  font-size: 12px;
+}
 
 /* Checkmark — белый круг, чёрная галочка */
 .set-check {
