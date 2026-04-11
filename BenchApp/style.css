@@ -501,6 +501,12 @@ body {
   background: var(--done-bg);
   color: var(--done);
 }
+.day-chip.skipped {
+  background: rgba(255, 59, 48, 0.12);
+  color: #ff3b30;
+  border-color: rgba(255, 59, 48, 0.2);
+  text-decoration: line-through;
+}
 .day-chip.current {
   background: var(--accent-muted);
   color: var(--accent);
@@ -524,6 +530,12 @@ body {
 }
 .exercise-card.base-exercise {
   border-left: 3px solid var(--accent);
+}
+.exercise-card.ex-done {
+  opacity: 0.6;
+}
+.exercise-card.ex-done .ex-progress-fill {
+  background: var(--done);
 }
 .exercise-card .ex-name {
   font-family: 'Oswald', sans-serif;
@@ -1836,6 +1848,19 @@ body {
   margin-top: 10px;
   text-align: center;
 }
+#modal-info .modal-content {
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+#modal-info-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
+  max-height: 55vh;
+  padding-right: 4px;
+}
 .modal-buttons {
   display: flex;
   gap: 8px;
@@ -1937,6 +1962,74 @@ body {
 }
 .weight-preset-btn.plus {
   color: var(--accent);
+}
+
+/* ============ SKIP WORKOUT ============ */
+.skip-section {
+  display: flex;
+  gap: 6px;
+  padding: 0 0 10px;
+}
+.btn-skip {
+  flex: 1;
+  padding: 10px;
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.15);
+  border-radius: var(--r-md);
+  color: #ff3b30;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-skip:active {
+  background: rgba(255, 59, 48, 0.2);
+  transform: scale(0.97);
+}
+.btn-unskip {
+  flex: 1;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--t2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-unskip:active { opacity: 0.6; }
+.skip-reason {
+  background: rgba(255, 59, 48, 0.06);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  color: #ff3b30;
+  font-size: 12px;
+  font-weight: 500;
+  border-left: 3px solid #ff3b30;
+}
+
+/* ============ EXERCISE CARD ICONS ============ */
+.ex-type-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg2);
+  border-radius: 8px;
+}
+.exercise-card-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.exercise-card-body {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ============ EXERCISE PROGRESS BAR ============ */

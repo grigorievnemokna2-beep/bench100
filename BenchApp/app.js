@@ -267,12 +267,38 @@ const App = {
       for (const day of week.days) {
         const key = `${week.week}-${day.day}`;
         const wo = cycle.workouts[key];
-        if (!wo || !wo.completed) {
+        if (!wo || (!wo.completed && !wo.skipped)) {
           return { week: week.week, day: day.day, weekTitle: week.title };
         }
       }
     }
     return null;
+  },
+
+  skipWorkout(week, day) {
+    const cycle = this.getCycle();
+    const key = `${week}-${day}`;
+    if (!cycle.workouts) cycle.workouts = {};
+    if (!cycle.workouts[key]) {
+      cycle.workouts[key] = { exercises: {}, date: new Date().toISOString(), completed: false };
+    }
+    const reason = prompt('Причина пропуска (необязательно):');
+    if (reason === null) return;
+    cycle.workouts[key].skipped = true;
+    cycle.workouts[key].skipReason = reason || '';
+    this.saveData();
+    this.renderWeeks();
+  },
+
+  unskipWorkout(week, day) {
+    const cycle = this.getCycle();
+    const key = `${week}-${day}`;
+    if (cycle.workouts && cycle.workouts[key]) {
+      delete cycle.workouts[key].skipped;
+      delete cycle.workouts[key].skipReason;
+    }
+    this.saveData();
+    this.renderWeeks();
   },
 
   // ==================== СОЗДАНИЕ ПРОХОДКИ ====================
@@ -379,9 +405,11 @@ const App = {
         const key = `${week.week}-${day.day}`;
         const workout = cycle.workouts ? cycle.workouts[key] : null;
         const completed = workout && workout.completed;
-        const cls = completed ? 'completed' : '';
+        const skipped = workout && workout.skipped;
+        const cls = completed ? 'completed' : (skipped ? 'skipped' : '');
+        const label = completed ? day.day + ' &#10003;' : (skipped ? day.day + ' &#10007;' : day.day);
 
-        return `<div class="day-chip ${cls}" onclick="event.stopPropagation(); App.openDay(${week.week}, '${day.day}')">${day.day}${completed ? ' &#10003;' : ''}</div>`;
+        return `<div class="day-chip ${cls}" onclick="event.stopPropagation(); App.openDay(${week.week}, '${day.day}')">${label}</div>`;
       }).join('');
 
       return `
@@ -434,13 +462,30 @@ const App = {
     const workout = cycle.workouts ? cycle.workouts[workoutKey] : null;
 
     document.getElementById('day-title').textContent = `Неделя ${this.currentWeek} - ${this.currentDay}`;
-    this.renderExercises(dayData, workout, cycle.maxWeight);
+
+    // Skip section
+    const container = document.getElementById('exercises-list');
+    let skipHtml = '';
+    const isSkipped = workout && workout.skipped;
+    const isCompleted = workout && workout.completed;
+
+    if (isSkipped) {
+      skipHtml += workout.skipReason
+        ? `<div class="skip-reason">Пропущено: ${this.escapeHtml(workout.skipReason)}</div>`
+        : `<div class="skip-reason">Тренировка пропущена</div>`;
+      skipHtml += `<div class="skip-section"><button class="btn-unskip" onclick="App.unskipWorkout(${this.currentWeek}, '${this.currentDay}'); App.showDay()">Отменить пропуск</button></div>`;
+    } else if (!isCompleted) {
+      skipHtml += `<div class="skip-section"><button class="btn-skip" onclick="App.skipWorkout(${this.currentWeek}, '${this.currentDay}'); App.showWeeks()">&#10007; Пропустить тренировку</button></div>`;
+    }
+
+    this.renderExercises(dayData, workout, cycle.maxWeight, skipHtml);
   },
 
-  renderExercises(dayData, workout, maxWeight) {
+  renderExercises(dayData, workout, maxWeight, skipHtml = '') {
     const container = document.getElementById('exercises-list');
 
-    container.innerHTML = dayData.exercises.map((ex, idx) => {
+    let html = skipHtml;
+    html += dayData.exercises.map((ex, idx) => {
       const saved = workout && workout.exercises ? workout.exercises[idx] : null;
       const baseCls = ex.isBase ? 'base-exercise' : '';
       let detailsHtml = '';
@@ -500,18 +545,29 @@ const App = {
         progressHtml = `<div class="ex-progress-bar"><div class="ex-progress-fill" style="width:${pct}%"></div></div>`;
       }
 
+      // Type icon
+      const icon = ex.isBase ? '&#9878;' : (ex.isBodyweight ? '&#9899;' : (ex.isSpecial ? '&#9733;' : '&#9675;'));
+      const doneClass = completedSets >= totalSets && totalSets > 0 ? 'ex-done' : '';
+
       return `
-        <div class="exercise-card ${baseCls}" onclick="App.openExercise(${idx})">
+        <div class="exercise-card ${baseCls} ${doneClass}" onclick="App.openExercise(${idx})">
           <button class="ex-info-btn" onclick="event.stopPropagation(); App.showExerciseInfo(${idx})" title="Инфо">i</button>
-          <div class="ex-name">${idx + 1}. ${customName}</div>
-          <div class="ex-details">${detailsHtml}</div>
-          ${supersetHtml}
-          ${noteHtml}
-          ${checkHtml}
+          <div class="exercise-card-row">
+            <div class="ex-type-icon">${icon}</div>
+            <div class="exercise-card-body">
+              <div class="ex-name">${customName}</div>
+              <div class="ex-details">${detailsHtml}</div>
+              ${supersetHtml}
+              ${noteHtml}
+              ${checkHtml}
+            </div>
+          </div>
           ${progressHtml}
         </div>
       `;
     }).join('');
+
+    container.innerHTML = html;
   },
 
   // ==================== ЭКРАН: УПРАЖНЕНИЕ (ПОДХОДЫ) ====================

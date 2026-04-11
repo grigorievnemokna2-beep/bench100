@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Icon Generator</title>
+<style>
+body { background: #222; color: #fff; font-family: Arial; display: flex; flex-direction: column; align-items: center; padding: 40px; gap: 20px; }
+canvas { border: 1px solid #444; }
+a { color: #e83040; font-size: 18px; margin-top: 8px; display: inline-block; }
+</style>
+</head>
+<body>
+<h2>Bench 100 Icon</h2>
+<div style="display:flex;gap:30px;">
+  <div style="text-align:center">
+    <h3>512x512</h3>
+    <canvas id="c512" width="512" height="512"></canvas>
+    <br><a id="dl512" download="icon-512.png" href="#">Download 512</a>
+  </div>
+  <div style="text-align:center">
+    <h3>192x192</h3>
+    <canvas id="c192" width="192" height="192"></canvas>
+    <br><a id="dl192" download="icon-192.png" href="#">Download 192</a>
+  </div>
+</div>
+
+<script>
+function drawIcon(canvas) {
+  const s = canvas.width;
+  const ctx = canvas.getContext('2d');
+  const u = s / 512;
+
+  // Background rounded rect
+  const r = 80 * u;
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(s - r, 0);
+  ctx.quadraticCurveTo(s, 0, s, r);
+  ctx.lineTo(s, s - r);
+  ctx.quadraticCurveTo(s, s, s - r, s);
+  ctx.lineTo(r, s);
+  ctx.quadraticCurveTo(0, s, 0, s - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.fillStyle = '#060608';
+  ctx.fill();
+
+  const cx = s / 2;
+  const cy = s / 2;
+
+  // Red glow
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, s * 0.4);
+  glow.addColorStop(0, 'rgba(232, 48, 64, 0.15)');
+  glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, s, s);
+
+  const red = '#e83040';
+  const darkRed = '#b8202f';
+
+  // === HORIZONTAL BARBELL — plates big→small outward ===
+  const barH = 16 * u;
+  const bigW = 44 * u;
+  const bigH = 180 * u;
+  const medW = 36 * u;
+  const medH = 140 * u;
+  const smallW = 28 * u;
+  const smallH = 100 * u;
+  const collarW = 14 * u;
+  const collarH = 40 * u;
+
+  // Positions from center outward: collar → big → med → small
+  const collarX = 52 * u;
+  const bigX = 90 * u;
+  const medX = 130 * u;
+  const smallX = 162 * u;
+  const barHalf = 195 * u;
+
+  // Shadow glow
+  ctx.shadowColor = 'rgba(232, 48, 64, 0.5)';
+  ctx.shadowBlur = 40 * u;
+
+  // Main bar
+  ctx.fillStyle = red;
+  ctx.beginPath();
+  ctx.roundRect(cx - barHalf, cy - barH / 2, barHalf * 2, barH, barH / 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // --- Left side (big closest to center, small on edge) ---
+
+  // Collar
+  ctx.fillStyle = '#c0c0c0';
+  ctx.beginPath();
+  ctx.roundRect(cx - collarX - collarW / 2, cy - collarH / 2, collarW, collarH, 3 * u);
+  ctx.fill();
+
+  // Big plate (closest to center)
+  ctx.fillStyle = red;
+  ctx.beginPath();
+  ctx.roundRect(cx - bigX - bigW / 2, cy - bigH / 2, bigW, bigH, 8 * u);
+  ctx.fill();
+  ctx.fillStyle = darkRed;
+  ctx.beginPath();
+  ctx.roundRect(cx - bigX + bigW / 2 - 6 * u, cy - bigH / 2, 6 * u, bigH, [0, 8 * u, 8 * u, 0]);
+  ctx.fill();
+
+  // Medium plate
+  ctx.fillStyle = red;
+  ctx.beginPath();
+  ctx.roundRect(cx - medX - medW / 2, cy - medH / 2, medW, medH, 6 * u);
+  ctx.fill();
+  ctx.fillStyle = darkRed;
+  ctx.beginPath();
+  ctx.roundRect(cx - medX + medW / 2 - 5 * u, cy - medH / 2, 5 * u, medH, [0, 6 * u, 6 * u, 0]);
+  ctx.fill();
+
+  // Small plate (on the edge)
+  ctx.fillStyle = red;
+  ctx.beginPath();
+  ctx.roundRect(cx - smallX - smallW / 2, cy - smallH / 2, smallW, smallH, 5 * u);
+  ctx.fill();
+
+  // --- Right side (mirror) ---
+
+  // Collar
+  ctx.fillStyle = '#c0c0c0';
+  ctx.beginPath();
+  ctx.roundRect(cx + collarX - collarW / 2, cy - collarH / 2, collarW, collarH, 3 * u);
+  ctx.fill();
+
+  // Big plate (closest to center)
+  ctx.fillStyle = red;
+  ctx.beginPath();
+  ctx.roundRect(cx + bigX - bigW / 2, cy - bigH / 2, bigW, bigH, 8 * u);
+  ctx.fill();
+  ctx.fillStyle = darkRed;
+  ctx.beginPath();
+  ctx.roundRect(cx + bigX - bigW / 2, cy - bigH / 2, 6 * u, bigH, [8 * u, 0, 0, 8 * u]);
+  ctx.fill();
+
+  // Medium plate
+  ctx.fillStyle = red;
+  ctx.beginPath();
+  ctx.roundRect(cx + medX - medW / 2, cy - medH / 2, medW, medH, 6 * u);
+  ctx.fill();
+  ctx.fillStyle = darkRed;
+  ctx.beginPath();
+  ctx.roundRect(cx + medX - medW / 2, cy - medH / 2, 5 * u, medH, [6 * u, 0, 0, 6 * u]);
+  ctx.fill();
+
+  // Small plate (on the edge)
+  ctx.fillStyle = red;
+  ctx.beginPath();
+  ctx.roundRect(cx + smallX - smallW / 2, cy - smallH / 2, smallW, smallH, 5 * u);
+  ctx.fill();
+
+  // Sleeve caps (bar ends)
+  ctx.fillStyle = '#999';
+  ctx.beginPath();
+  ctx.roundRect(cx - barHalf - 10 * u, cy - 12 * u, 14 * u, 24 * u, [12 * u, 0, 0, 12 * u]);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.roundRect(cx + barHalf - 4 * u, cy - 12 * u, 14 * u, 24 * u, [0, 12 * u, 12 * u, 0]);
+  ctx.fill();
+
+  // Subtle highlight on bar
+  ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+  ctx.lineWidth = 2 * u;
+  ctx.beginPath();
+  ctx.moveTo(cx - 40 * u, cy - barH / 2 + 2 * u);
+  ctx.lineTo(cx + 40 * u, cy - barH / 2 + 2 * u);
+  ctx.stroke();
+}
+
+const c512 = document.getElementById('c512');
+const c192 = document.getElementById('c192');
+drawIcon(c512);
+drawIcon(c192);
+
+document.getElementById('dl512').href = c512.toDataURL('image/png');
+document.getElementById('dl192').href = c192.toDataURL('image/png');
+</script>
+</body>
+</html>
