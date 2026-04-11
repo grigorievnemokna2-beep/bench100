@@ -30,6 +30,14 @@ const App = {
     this.loadData();
     this.showCycles();
 
+    // Запрашиваем разрешение на уведомления (для таймера на экране блокировки)
+    if ('Notification' in window && Notification.permission === 'default') {
+      document.addEventListener('click', function reqPerm() {
+        Notification.requestPermission();
+        document.removeEventListener('click', reqPerm);
+      }, { once: true });
+    }
+
     // Восстановление таймера при возврате в приложение
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && this.timerRunning && this.timerEndAt) {
@@ -1267,11 +1275,11 @@ const App = {
 
   toggleTimer() {
     if (this.timerRunning) {
-      // Пауза — запоминаем оставшееся время
+      // Пауза
       this.timerRunning = false;
       this.timerEndAt = null;
       clearInterval(this.timerInterval);
-      // timerSeconds уже актуален
+      this.releaseWakeLock();
       const btn = document.getElementById('btn-timer-toggle');
       btn.textContent = 'Старт';
       btn.classList.remove('running');
@@ -1287,6 +1295,7 @@ const App = {
 
       this.timerRunning = true;
       this.timerEndAt = Date.now() + this.timerSeconds * 1000;
+      this.requestWakeLock();
       const btn = document.getElementById('btn-timer-toggle');
       btn.textContent = 'Пауза';
       btn.classList.add('running');
@@ -1312,6 +1321,7 @@ const App = {
     clearInterval(this.timerInterval);
     this.timerRunning = false;
     this.timerEndAt = null;
+    this.releaseWakeLock();
     this.timerSeconds = this.timerTarget || 0;
     this.updateTimerDisplay();
 
@@ -1321,24 +1331,39 @@ const App = {
 
     const display = document.getElementById('timer-display');
     display.classList.remove('running', 'warning', 'done');
+    document.getElementById('timer-section').classList.remove('timer-active', 'timer-warning', 'timer-done');
   },
 
   updateTimerDisplay() {
     const display = document.getElementById('timer-display');
+    const section = document.getElementById('timer-section');
+    const ring = document.getElementById('timer-ring-progress');
     const minutes = Math.floor(this.timerSeconds / 60);
     const secs = this.timerSeconds % 60;
     display.textContent = `${minutes}:${secs.toString().padStart(2, '0')}`;
 
     display.classList.remove('running', 'warning', 'done');
+    section.classList.remove('timer-active', 'timer-warning', 'timer-done');
+
     if (this.timerRunning) {
       if (this.timerSeconds <= 10) {
         display.classList.add('warning');
+        section.classList.add('timer-warning');
       } else {
         display.classList.add('running');
+        section.classList.add('timer-active');
       }
     }
     if (this.timerSeconds <= 0 && this.timerTarget > 0) {
       display.classList.add('done');
+      section.classList.add('timer-done');
+    }
+
+    // Ring progress
+    if (ring) {
+      const circumference = 2 * Math.PI * 88;
+      const progress = this.timerTarget > 0 ? this.timerSeconds / this.timerTarget : 0;
+      ring.style.strokeDashoffset = circumference * (1 - progress);
     }
   },
 
@@ -1347,9 +1372,24 @@ const App = {
     display.classList.add('done');
     display.textContent = '0:00';
 
-    // Вибрация (если поддерживается)
+    // Release wake lock
+    this.releaseWakeLock();
+
+    // Вибрация
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200, 100, 200]);
+    }
+
+    // Уведомление на экране блокировки
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('Bench 100', {
+          body: 'Время отдыха вышло! Следующий подход.',
+          icon: 'icon-192.png',
+          tag: 'bench100-timer',
+          requireInteraction: false
+        });
+      } catch (e) {}
     }
 
     // Звуковой сигнал через Web Audio API
@@ -1369,8 +1409,22 @@ const App = {
       playBeep(880, ctx.currentTime, 0.15);
       playBeep(880, ctx.currentTime + 0.2, 0.15);
       playBeep(1200, ctx.currentTime + 0.4, 0.3);
-    } catch (e) {
-      // Нет поддержки аудио
+    } catch (e) {}
+  },
+
+  // Wake Lock — не гасить экран пока таймер работает
+  async requestWakeLock() {
+    if ('wakeLock' in navigator) {
+      try {
+        this._wakeLock = await navigator.wakeLock.request('screen');
+      } catch (e) {}
+    }
+  },
+
+  releaseWakeLock() {
+    if (this._wakeLock) {
+      this._wakeLock.release().catch(() => {});
+      this._wakeLock = null;
     }
   },
 
