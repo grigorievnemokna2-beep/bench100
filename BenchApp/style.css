@@ -602,7 +602,7 @@ body {
 /* Info modal content */
 .info-empty {
   text-align: center;
-  padding: 20px 0;
+  padding: 24px 0;
   color: var(--t3);
   font-size: 14px;
 }
@@ -610,16 +610,101 @@ body {
   text-align: center;
   background: var(--accent);
   color: #000;
-  padding: 8px 16px;
+  padding: 10px 16px;
   border-radius: var(--r-pill);
   font-family: 'Oswald', sans-serif;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
-  margin-bottom: 12px;
-  display: inline-block;
+  margin-bottom: 16px;
+  display: block;
   width: 100%;
 }
+.info-session {
+  background: var(--bg2);
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+}
+.info-session-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t2);
+}
+.info-cycle {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+.info-sets {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--t3);
+  background: var(--surface);
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+}
+.info-sets.all-done {
+  color: var(--done);
+  background: var(--done-bg);
+}
+.info-sets-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.info-set-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.info-set-weight {
+  color: var(--accent);
+  font-family: 'Oswald', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+}
+.info-set-x {
+  color: var(--t3);
+  font-size: 12px;
+}
+.info-set-reps {
+  color: var(--t1);
+  font-weight: 500;
+  font-size: 14px;
+}
+.info-set-count {
+  color: var(--t2);
+  font-size: 13px;
+  font-weight: 500;
+}
+.info-show-all {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.info-show-all:active {
+  background: var(--accent-muted);
+  transform: scale(0.97);
+}
+
+/* Legacy info styles kept for progress screen */
 .info-record {
   display: flex;
   align-items: center;
@@ -636,18 +721,6 @@ body {
   min-width: 70px;
   flex-shrink: 0;
 }
-.info-cycle {
-  color: var(--accent);
-  font-size: 10px;
-  display: block;
-  margin-bottom: 2px;
-}
-.info-data {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
 .info-weight {
   color: var(--accent);
   font-family: 'Oswald', sans-serif;
@@ -659,17 +732,11 @@ body {
   font-size: 12px;
   font-weight: 500;
 }
-.info-sets {
-  color: var(--t3);
-  font-size: 11px;
-  font-weight: 600;
-  background: var(--bg2);
-  padding: 2px 8px;
-  border-radius: var(--r-pill);
-}
-.info-sets.all-done {
-  color: var(--done);
-  background: var(--done-bg);
+.info-data {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 /* ============ BADGES ============ */

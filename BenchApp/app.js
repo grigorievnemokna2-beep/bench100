@@ -1064,6 +1064,8 @@ const App = {
   },
 
   // ==================== ИНФО ПО УПРАЖНЕНИЮ ====================
+  _infoShowAll: false,
+
   showExerciseInfo(exIdx) {
     const weekData = PROGRAM.find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
@@ -1074,7 +1076,7 @@ const App = {
     const cycle = this.getCycle();
     const allCycles = this.data.cycles;
 
-    // Собираем все записи этого упражнения из ВСЕХ проходок
+    // Собираем подробные записи из ВСЕХ проходок
     const records = [];
 
     allCycles.forEach(c => {
@@ -1090,13 +1092,11 @@ const App = {
             const exData = workout.exercises[pIdx];
             if (!exData) return;
 
-            // Пропускаем текущее упражнение (чтобы показать только предыдущие)
             if (c.id === cycle.id && week.week === this.currentWeek && day.day === this.currentDay && pIdx === exIdx) return;
 
+            const sets = [];
             let completedSets = 0;
             let totalSets = 0;
-            let weights = [];
-            let reps = 0;
 
             if (pEx.segments && !pEx.isIndividual) {
               let setNum = 0;
@@ -1104,14 +1104,14 @@ const App = {
                 const calcW = this.roundWeight(c.maxWeight * seg.percent / 100);
                 for (let s = 0; s < seg.sets; s++) {
                   totalSets++;
-                  const ov = exData.setWeights && exData.setWeights[setNum] !== undefined
-                    ? exData.setWeights[setNum] : null;
+                  const ov = exData.setWeights && exData.setWeights[setNum] !== undefined ? exData.setWeights[setNum] : null;
                   const w = ov !== null ? ov : calcW;
                   const done = exData.sets && exData.sets[setNum] && exData.sets[setNum].done;
+                  const actualReps = exData.sets && exData.sets[setNum] && exData.sets[setNum].actualReps !== undefined
+                    ? exData.sets[setNum].actualReps : seg.reps;
                   if (done) {
                     completedSets++;
-                    weights.push(w);
-                    reps += seg.reps;
+                    sets.push({ weight: w, reps: actualReps });
                   }
                   setNum++;
                 }
@@ -1122,19 +1122,22 @@ const App = {
                 const w = exData.setWeights && exData.setWeights[i] !== undefined
                   ? exData.setWeights[i] : (exData.weight || 0);
                 const done = exData.sets && exData.sets[i] && exData.sets[i].done;
+                const actualReps = exData.sets && exData.sets[i] && exData.sets[i].actualReps !== undefined
+                  ? exData.sets[i].actualReps : pEx.reps;
                 if (done) {
                   completedSets++;
-                  if (w > 0) weights.push(w);
-                  reps += pEx.reps;
+                  sets.push({ weight: w, reps: actualReps });
                 }
               }
             } else if (pEx.isBodyweight) {
               totalSets = pEx.sets;
               for (let i = 0; i < pEx.sets; i++) {
                 const done = exData.sets && exData.sets[i] && exData.sets[i].done;
+                const actualReps = exData.sets && exData.sets[i] && exData.sets[i].actualReps !== undefined
+                  ? exData.sets[i].actualReps : pEx.reps;
                 if (done) {
                   completedSets++;
-                  reps += pEx.reps;
+                  sets.push({ weight: 0, reps: actualReps });
                 }
               }
             }
@@ -1144,11 +1147,9 @@ const App = {
                 cycleName: c.name,
                 week: week.week,
                 day: day.day,
-                weights,
-                maxWeight: weights.length > 0 ? Math.max(...weights) : 0,
+                sets,
                 completedSets,
-                totalSets,
-                reps
+                totalSets
               });
             }
           });
@@ -1156,48 +1157,90 @@ const App = {
       });
     });
 
-    // Формируем контент модалки
+    this._infoRecords = records;
+    this._infoAllCycles = allCycles;
+    this._infoShowAll = false;
+    this.renderExerciseInfoModal(ex.name, records, allCycles, false);
+  },
+
+  renderExerciseInfoModal(name, records, allCycles, showAll) {
     const modal = document.getElementById('modal-info');
     const title = document.getElementById('modal-info-title');
     const body = document.getElementById('modal-info-body');
 
-    title.textContent = ex.name;
+    title.textContent = name;
 
     if (records.length === 0) {
       body.innerHTML = '<div class="info-empty">Нет данных о предыдущих тренировках</div>';
-    } else {
-      // Показываем последние 5 записей (от новых к старым)
-      const last = records.slice(-5).reverse();
-      let html = '';
-
-      last.forEach(r => {
-        const uniqueW = [...new Set(r.weights)].sort((a, b) => a - b);
-        const weightStr = uniqueW.length > 0 ? uniqueW.join(' / ') + ' кг' : 'б/в';
-        const allDone = r.completedSets >= r.totalSets;
-
-        html += `
-          <div class="info-record">
-            <div class="info-when">${allCycles.length > 1 ? '<span class="info-cycle">' + this.escapeHtml(r.cycleName) + '</span> ' : ''}Нед.${r.week} ${r.day}</div>
-            <div class="info-data">
-              <span class="info-weight">${weightStr}</span>
-              <span class="info-reps">${r.reps} повт.</span>
-              <span class="info-sets ${allDone ? 'all-done' : ''}">${r.completedSets}/${r.totalSets}</span>
-            </div>
-          </div>
-        `;
-      });
-
-      // PR
-      const allWeights = records.flatMap(r => r.weights).filter(w => w > 0);
-      if (allWeights.length > 0) {
-        const pr = Math.max(...allWeights);
-        html = `<div class="info-pr">PR: ${pr} кг</div>` + html;
-      }
-
-      body.innerHTML = html;
+      modal.classList.remove('hidden');
+      return;
     }
 
+    const displayed = showAll ? [...records].reverse() : records.slice(-3).reverse();
+    const showCycle = allCycles.length > 1;
+    let html = '';
+
+    // PR
+    const allWeights = records.flatMap(r => r.sets.map(s => s.weight)).filter(w => w > 0);
+    if (allWeights.length > 0) {
+      const pr = Math.max(...allWeights);
+      html += `<div class="info-pr">PR: ${pr} кг</div>`;
+    }
+
+    displayed.forEach(r => {
+      const allDone = r.completedSets >= r.totalSets;
+      const cycleLabel = showCycle ? `<span class="info-cycle">${this.escapeHtml(r.cycleName)}</span> ` : '';
+
+      html += `<div class="info-session">`;
+      html += `<div class="info-session-header">
+        <span>${cycleLabel}Нед.${r.week} ${r.day}</span>
+        <span class="info-sets ${allDone ? 'all-done' : ''}">${r.completedSets}/${r.totalSets}</span>
+      </div>`;
+
+      // Группируем подходы по весу+повторениям
+      const groups = [];
+      r.sets.forEach(s => {
+        const last = groups[groups.length - 1];
+        if (last && last.weight === s.weight && last.reps === s.reps) {
+          last.count++;
+        } else {
+          groups.push({ weight: s.weight, reps: s.reps, count: 1 });
+        }
+      });
+
+      html += `<div class="info-sets-detail">`;
+      groups.forEach(g => {
+        if (g.weight > 0) {
+          html += `<div class="info-set-group">
+            <span class="info-set-weight">${g.weight} кг</span>
+            <span class="info-set-x">&times;</span>
+            <span class="info-set-reps">${g.reps} повт.</span>
+            ${g.count > 1 ? `<span class="info-set-x">&times;</span><span class="info-set-count">${g.count} подх.</span>` : ''}
+          </div>`;
+        } else {
+          html += `<div class="info-set-group">
+            <span class="info-set-reps">${g.reps} повт.</span>
+            ${g.count > 1 ? `<span class="info-set-x">&times;</span><span class="info-set-count">${g.count} подх.</span>` : ''}
+          </div>`;
+        }
+      });
+      html += `</div></div>`;
+    });
+
+    if (!showAll && records.length > 3) {
+      html += `<button class="info-show-all" onclick="App.toggleInfoShowAll()">Показать всю историю (${records.length})</button>`;
+    } else if (showAll && records.length > 3) {
+      html += `<button class="info-show-all" onclick="App.toggleInfoShowAll()">Скрыть</button>`;
+    }
+
+    body.innerHTML = html;
     modal.classList.remove('hidden');
+  },
+
+  toggleInfoShowAll() {
+    this._infoShowAll = !this._infoShowAll;
+    const title = document.getElementById('modal-info-title').textContent;
+    this.renderExerciseInfoModal(title, this._infoRecords, this._infoAllCycles, this._infoShowAll);
   },
 
   // ==================== ТАЙМЕР ====================
