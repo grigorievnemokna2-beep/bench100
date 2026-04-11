@@ -1,6 +1,6 @@
 /* ============================================================
-   BENCH 100 — APPLE × BERSERKER v2
-   Чёрный. Красный. Белый. Ничего лишнего.
+   BENCH 100 — NEON FITNESS v3
+   Тёмный. Лаймовый. Чистый.
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
@@ -13,22 +13,22 @@
 }
 
 :root {
-  --bg: #000000;
-  --bg2: #0c0c0c;
-  --surface: #161618;
-  --surface2: #1e1e21;
-  --surface3: #28282c;
+  --bg: #0A0A0C;
+  --bg2: #0F0F12;
+  --surface: #161619;
+  --surface2: #1E1E22;
+  --surface3: #28282D;
 
-  /* Berserker */
-  --accent: #e83040;
-  --accent-bright: #ff3b4a;
-  --accent-muted: rgba(232, 48, 64, 0.14);
-  --accent-subtle: rgba(232, 48, 64, 0.07);
-  --accent-glow: rgba(232, 48, 64, 0.4);
+  /* Neon Lime */
+  --accent: #CDFF00;
+  --accent-bright: #D8FF33;
+  --accent-muted: rgba(205, 255, 0, 0.14);
+  --accent-subtle: rgba(205, 255, 0, 0.07);
+  --accent-glow: rgba(205, 255, 0, 0.35);
 
-  /* Done / Success — белый, не зелёный */
-  --done: #ffffff;
-  --done-bg: rgba(255, 255, 255, 0.12);
+  /* Done / Success */
+  --done: #CDFF00;
+  --done-bg: rgba(205, 255, 0, 0.12);
   --done-check: #000000;
 
   /* Warn */
@@ -46,10 +46,10 @@
   --line-solid: #2a2a2d;
 
   /* Radius */
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 26px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
   --r-pill: 100px;
 
   --safe-top: env(safe-area-inset-top, 0px);
@@ -177,7 +177,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   background: var(--accent);
-  color: white;
+  color: #000;
   border: none;
   padding: 15px 40px;
   border-radius: var(--r-pill);
@@ -223,7 +223,7 @@ body {
 
 .btn-primary {
   background: var(--accent);
-  color: white;
+  color: #000;
   border: none;
   padding: 16px;
   border-radius: var(--r-md);
@@ -334,7 +334,7 @@ body {
 
 .max-badge {
   background: var(--accent);
-  color: white;
+  color: #000;
   padding: 7px 20px;
   border-radius: var(--r-pill);
   font-family: 'Oswald', sans-serif;
@@ -592,7 +592,7 @@ body {
 .ex-info-btn:active {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: #000;
   transform: scale(0.85);
 }
 
@@ -606,7 +606,7 @@ body {
 .info-pr {
   text-align: center;
   background: var(--accent);
-  color: white;
+  color: #000;
   padding: 8px 16px;
   border-radius: var(--r-pill);
   font-family: 'Oswald', sans-serif;
@@ -925,7 +925,7 @@ body {
 }
 .timer-btn:active, .timer-btn.active {
   background: var(--accent);
-  color: white;
+  color: #000;
 }
 
 .timer-actions {
@@ -938,7 +938,7 @@ body {
   background: var(--accent);
   border: none;
   border-radius: var(--r-md);
-  color: white;
+  color: #000;
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
@@ -984,7 +984,7 @@ body {
 }
 .timer-adj-btn:active {
   background: var(--accent);
-  color: white;
+  color: #000;
 }
 .timer-adj-btn.plus {
   color: var(--t1);
@@ -993,7 +993,7 @@ body {
 /* Editable weights */
 .set-weight.editable {
   cursor: pointer;
-  border-bottom: 1px dashed rgba(232, 48, 64, 0.3);
+  border-bottom: 1px dashed rgba(205, 255, 0, 0.3);
   display: inline-block;
 }
 .set-weight.editable:active { opacity: 0.4; }
@@ -1029,7 +1029,7 @@ body {
 }
 .progress-tab.active {
   background: var(--accent);
-  color: white;
+  color: #000;
 }
 .progress-tab:active { opacity: 0.7; }
 
@@ -1169,7 +1169,7 @@ body {
 }
 .pr-badge {
   background: var(--accent);
-  color: white;
+  color: #000;
   padding: 2px 8px;
   font-size: 9px;
   font-weight: 700;
@@ -1537,7 +1537,7 @@ body {
 }
 .ex-filter.active {
   background: var(--accent);
-  color: white;
+  color: #000;
 }
 .ex-filter:active { opacity: 0.5; }
 
@@ -1771,4 +1771,4 @@ body {
 .text-yellow { color: var(--warn); }
 
 .content::-webkit-scrollbar { width: 0; }
-::selection { background: var(--accent); color: white; }
+::selection { background: var(--accent); color: #000; }

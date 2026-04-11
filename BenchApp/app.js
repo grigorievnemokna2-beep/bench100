@@ -282,7 +282,7 @@ const App = {
       toast.style.cssText = 'position:fixed;bottom:calc(90px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--t1);padding:12px 20px;border-radius:var(--r-pill);font-size:14px;font-weight:600;z-index:200;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);border:1px solid var(--line);';
       document.body.appendChild(toast);
     }
-    toast.innerHTML = '<span>Удалено</span><button onclick="App.undoDelete()" style="background:var(--accent);color:#fff;border:none;padding:6px 16px;border-radius:var(--r-pill);font-size:13px;font-weight:700;cursor:pointer;">Отменить</button>';
+    toast.innerHTML = '<span>Удалено</span><button onclick="App.undoDelete()" style="background:var(--accent);color:#000;border:none;padding:6px 16px;border-radius:var(--r-pill);font-size:13px;font-weight:700;cursor:pointer;">Отменить</button>';
     toast.style.display = 'flex';
     this._undoTimeout = setTimeout(() => {
       toast.style.display = 'none';
@@ -2070,7 +2070,7 @@ const App = {
     const w = 320, h = options.height || 160;
     const pad = { t: 22, r: 12, b: 28, l: 40 };
     const cW = w - pad.l - pad.r, cH = h - pad.t - pad.b;
-    const c = '#e83040';
+    const c = '#CDFF00';
     const vals = data.map(d => d.value);
     const maxV = Math.max(...vals), minV = Math.min(...vals);
     const range = maxV - minV || 1;
@@ -2120,7 +2120,7 @@ const App = {
     const w = 320, h = options.height || 160;
     const pad = { t: 20, r: 12, b: 28, l: 40 };
     const cW = w - pad.l - pad.r, cH = h - pad.t - pad.b;
-    const c = options.color || '#e83040';
+    const c = options.color || '#CDFF00';
     const maxV = Math.max(...data.map(d => d.value)) * 1.18 || 1;
     const barW = Math.min(30, (cW / data.length) * 0.6);
     const gap = (cW - barW * data.length) / (data.length + 1);
@@ -2150,7 +2150,7 @@ const App = {
   renderSparkline(values, options = {}) {
     if (values.length < 2) return '';
     const w = options.width || 120, h = options.height || 32;
-    const c = options.color || '#e83040';
+    const c = options.color || '#CDFF00';
     const p = 3;
     const maxV = Math.max(...values), minV = Math.min(...values);
     const range = maxV - minV || 1;
