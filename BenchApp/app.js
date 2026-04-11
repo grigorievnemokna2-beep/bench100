@@ -54,11 +54,32 @@ const App = {
   loadData() {
     const raw = localStorage.getItem('bench100_data');
     if (raw) {
-      this.data = JSON.parse(raw);
+      try {
+        this.data = JSON.parse(raw);
+      } catch (e) {
+        this.data = { cycles: [], barWeight: 20, version: 1 };
+      }
     } else {
-      this.data = { cycles: [], barWeight: 20 };
+      this.data = { cycles: [], barWeight: 20, version: 1 };
     }
     if (this.data.barWeight === undefined) this.data.barWeight = 20;
+    this.migrateData();
+  },
+
+  migrateData() {
+    const v = this.data.version || 0;
+    if (v < 1) {
+      if (this.data.cycles) {
+        this.data.cycles.forEach(c => {
+          if (!c.id) c.id = Date.now().toString();
+          if (!c.workouts) c.workouts = {};
+          if (!c.maxWeight) c.maxWeight = 0;
+          if (!c.name) c.name = 'Проходка';
+        });
+      }
+      this.data.version = 1;
+      this.saveData();
+    }
   },
 
   // Сохранение данных в localStorage
@@ -92,6 +113,13 @@ const App = {
         const imported = JSON.parse(e.target.result);
         if (!imported.cycles || !Array.isArray(imported.cycles)) {
           alert('Неверный формат файла');
+          return;
+        }
+        const valid = imported.cycles.every(c =>
+          c && typeof c === 'object' && c.id && typeof c.maxWeight === 'number' && c.maxWeight > 0
+        );
+        if (!valid) {
+          alert('Файл содержит повреждённые данные проходок');
           return;
         }
         if (!confirm(`Восстановить данные? (${imported.cycles.length} проходок)\nТекущие данные будут заменены.`)) return;
@@ -235,7 +263,40 @@ const App = {
 
   deleteCycle(id) {
     if (!confirm('Удалить эту проходку? Все данные тренировок будут потеряны.')) return;
+    const deleted = this.data.cycles.find(c => c.id === id);
     this.data.cycles = this.data.cycles.filter(c => c.id !== id);
+    this.saveData();
+    this.renderCycles();
+    if (deleted) {
+      this._deletedCycle = deleted;
+      clearTimeout(this._undoTimeout);
+      this.showUndoToast();
+    }
+  },
+
+  showUndoToast() {
+    let toast = document.getElementById('undo-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'undo-toast';
+      toast.style.cssText = 'position:fixed;bottom:calc(90px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--t1);padding:12px 20px;border-radius:var(--r-pill);font-size:14px;font-weight:600;z-index:200;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,0.5);border:1px solid var(--line);';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = '<span>Удалено</span><button onclick="App.undoDelete()" style="background:var(--accent);color:#fff;border:none;padding:6px 16px;border-radius:var(--r-pill);font-size:13px;font-weight:700;cursor:pointer;">Отменить</button>';
+    toast.style.display = 'flex';
+    this._undoTimeout = setTimeout(() => {
+      toast.style.display = 'none';
+      this._deletedCycle = null;
+    }, 5000);
+  },
+
+  undoDelete() {
+    if (!this._deletedCycle) return;
+    this.data.cycles.push(this._deletedCycle);
+    this._deletedCycle = null;
+    clearTimeout(this._undoTimeout);
+    const toast = document.getElementById('undo-toast');
+    if (toast) toast.style.display = 'none';
     this.saveData();
     this.renderCycles();
   },
@@ -349,7 +410,7 @@ const App = {
           return `<span class="ex-weight">${weight} кг</span> x ${seg.reps} повт. x ${seg.sets} подх.`;
         }).join('<br>');
       } else if (ex.isSpecial) {
-        detailsHtml = ex.note || `${ex.totalReps} повторений`;
+        detailsHtml = ex.note ? this.escapeHtml(ex.note) : `${ex.totalReps} повторений`;
       } else if (ex.isBodyweight) {
         detailsHtml = `${ex.reps} повт. x ${ex.sets} подх. (без веса)`;
       } else if (ex.isIndividual) {
@@ -378,7 +439,7 @@ const App = {
       // Заметка
       let noteHtml = '';
       if (ex.note && !ex.isSpecial) {
-        noteHtml = `<div class="ex-note">${ex.note}</div>`;
+        noteHtml = `<div class="ex-note">${this.escapeHtml(ex.note)}</div>`;
       }
 
       // Выполнение
@@ -439,7 +500,7 @@ const App = {
 
     // Заметка
     if (ex.note) {
-      html += `<div class="exercise-note">${ex.note}</div>`;
+      html += `<div class="exercise-note">${this.escapeHtml(ex.note)}</div>`;
     }
 
     if (ex.isSpecial) {
@@ -677,7 +738,7 @@ const App = {
       html += `
         <div class="set-row">
           <div class="set-info">
-            <div class="set-weight" style="color: var(--yellow)">${ex.note || ex.name}</div>
+            <div class="set-weight" style="color: var(--yellow)">${this.escapeHtml(ex.note || ex.name)}</div>
           </div>
           <button class="set-check ${done ? 'done' : ''}" onclick="App.toggleSet(0)">
             ${done ? '&#10003;' : ''}
@@ -1344,27 +1405,9 @@ const App = {
           if (ex.isSpecial) return;
           const ed = wo.exercises[idx];
           if (!ed) return;
-          if (ex.segments && !ex.isIndividual) {
-            let sn = 0;
-            ex.segments.forEach(seg => {
-              const cW = this.roundWeight(cycle.maxWeight * seg.percent / 100);
-              for (let s = 0; s < seg.sets; s++) {
-                const ov = ed.setWeights && ed.setWeights[sn] !== undefined ? ed.setWeights[sn] : null;
-                const w = ov !== null ? ov : cW;
-                if (ed.sets && ed.sets[sn] && ed.sets[sn].done) { vol += w * seg.reps; sets++; }
-                sn++;
-              }
-            });
-          } else if (ex.isIndividual) {
-            for (let i = 0; i < ex.sets; i++) {
-              const w = ed.setWeights && ed.setWeights[i] !== undefined ? ed.setWeights[i] : (ed.weight || 0);
-              if (ed.sets && ed.sets[i] && ed.sets[i].done) { vol += w * ex.reps; sets++; }
-            }
-          } else if (ex.isBodyweight) {
-            for (let i = 0; i < ex.sets; i++) {
-              if (ed.sets && ed.sets[i] && ed.sets[i].done) sets++;
-            }
-          }
+          const sd = this.getExerciseSetData(ex, ed, cycle.maxWeight);
+          vol += sd.vol;
+          sets += sd.completedSets;
         });
       });
       if (vol > 0 || sets > 0) weekData.push({ week: week.week, vol: Math.round(vol), sets });
@@ -1831,70 +1874,20 @@ const App = {
               };
             }
 
-            let completedSets = 0;
-            let totalSets = 0;
-            let maxWeight = 0;
-            let vol = 0;
-            let reps = 0;
-            let weights = [];
+            const sd = this.getExerciseSetData(ex, exData, cycle.maxWeight);
 
-            if (ex.segments && !ex.isIndividual) {
-              let setNum = 0;
-              ex.segments.forEach(seg => {
-                const calcW = this.roundWeight(cycle.maxWeight * seg.percent / 100);
-                for (let s = 0; s < seg.sets; s++) {
-                  totalSets++;
-                  const ov = exData.setWeights && exData.setWeights[setNum] !== undefined
-                    ? exData.setWeights[setNum] : null;
-                  const w = ov !== null ? ov : calcW;
-                  weights.push(w);
-                  if (w > maxWeight) maxWeight = w;
-                  const done = exData.sets && exData.sets[setNum] && exData.sets[setNum].done;
-                  if (done) {
-                    completedSets++;
-                    vol += w * seg.reps;
-                    reps += seg.reps;
-                  }
-                  setNum++;
-                }
-              });
-            } else if (ex.isIndividual) {
-              totalSets = ex.sets;
-              for (let i = 0; i < ex.sets; i++) {
-                const w = exData.setWeights && exData.setWeights[i] !== undefined
-                  ? exData.setWeights[i] : (exData.weight || 0);
-                weights.push(w);
-                if (w > maxWeight) maxWeight = w;
-                const done = exData.sets && exData.sets[i] && exData.sets[i].done;
-                if (done) {
-                  completedSets++;
-                  vol += w * ex.reps;
-                  reps += ex.reps;
-                }
-              }
-            } else if (ex.isBodyweight) {
-              totalSets = ex.sets;
-              for (let i = 0; i < ex.sets; i++) {
-                const done = exData.sets && exData.sets[i] && exData.sets[i].done;
-                if (done) {
-                  completedSets++;
-                  reps += ex.reps;
-                }
-              }
-            }
-
-            if (completedSets > 0) {
+            if (sd.completedSets > 0) {
               history[name].records.push({
                 cycleName: cycle.name,
                 cycleMax: cycle.maxWeight,
                 week: week.week,
                 day: day.day,
-                maxWeight,
-                weights: weights.filter(w => w > 0),
-                completedSets,
-                totalSets,
-                vol,
-                reps
+                maxWeight: sd.maxWeight,
+                weights: sd.weights.filter(w => w > 0),
+                completedSets: sd.completedSets,
+                totalSets: sd.totalSets,
+                vol: sd.vol,
+                reps: sd.reps
               });
             }
           });
@@ -2047,28 +2040,7 @@ const App = {
           if (ex.isSpecial) return;
           const exData = workout.exercises[idx];
           if (!exData) return;
-
-          if (ex.segments && !ex.isIndividual) {
-            let setNum = 0;
-            ex.segments.forEach(seg => {
-              const calcW = this.roundWeight(cycle.maxWeight * seg.percent / 100);
-              for (let s = 0; s < seg.sets; s++) {
-                const ov = exData.setWeights && exData.setWeights[setNum] !== undefined
-                  ? exData.setWeights[setNum] : null;
-                const w = ov !== null ? ov : calcW;
-                const done = exData.sets && exData.sets[setNum] && exData.sets[setNum].done;
-                if (done) vol += w * seg.reps;
-                setNum++;
-              }
-            });
-          } else if (ex.isIndividual) {
-            for (let i = 0; i < ex.sets; i++) {
-              const w = exData.setWeights && exData.setWeights[i] !== undefined
-                ? exData.setWeights[i] : (exData.weight || 0);
-              const done = exData.sets && exData.sets[i] && exData.sets[i].done;
-              if (done) vol += w * ex.reps;
-            }
-          }
+          vol += this.getExerciseSetData(ex, exData, cycle.maxWeight).vol;
         });
       });
     });
@@ -2200,6 +2172,60 @@ const App = {
   },
 
   // ==================== УТИЛИТЫ ====================
+
+  // Общий хелпер: собирает статистику по подходам упражнения
+  getExerciseSetData(ex, exData, cycleMaxWeight) {
+    let completedSets = 0, totalSets = 0, maxWeight = 0, vol = 0, reps = 0;
+    const weights = [];
+
+    if (ex.segments && !ex.isIndividual) {
+      let setNum = 0;
+      ex.segments.forEach(seg => {
+        const calcW = this.roundWeight(cycleMaxWeight * seg.percent / 100);
+        for (let s = 0; s < seg.sets; s++) {
+          totalSets++;
+          const ov = exData.setWeights && exData.setWeights[setNum] !== undefined
+            ? exData.setWeights[setNum] : null;
+          const w = ov !== null ? ov : calcW;
+          weights.push(w);
+          if (w > maxWeight) maxWeight = w;
+          const done = exData.sets && exData.sets[setNum] && exData.sets[setNum].done;
+          if (done) {
+            completedSets++;
+            vol += w * seg.reps;
+            reps += seg.reps;
+          }
+          setNum++;
+        }
+      });
+    } else if (ex.isIndividual) {
+      totalSets = ex.sets;
+      for (let i = 0; i < ex.sets; i++) {
+        const w = exData.setWeights && exData.setWeights[i] !== undefined
+          ? exData.setWeights[i] : (exData.weight || 0);
+        weights.push(w);
+        if (w > maxWeight) maxWeight = w;
+        const done = exData.sets && exData.sets[i] && exData.sets[i].done;
+        if (done) {
+          completedSets++;
+          vol += w * ex.reps;
+          reps += ex.reps;
+        }
+      }
+    } else if (ex.isBodyweight) {
+      totalSets = ex.sets;
+      for (let i = 0; i < ex.sets; i++) {
+        const done = exData.sets && exData.sets[i] && exData.sets[i].done;
+        if (done) {
+          completedSets++;
+          reps += ex.reps;
+        }
+      }
+    }
+
+    return { completedSets, totalSets, maxWeight, vol, reps, weights };
+  },
+
   roundWeight(weight) {
     // Округление до 0.5 кг (минимальный шаг блинов)
     return Math.round(weight * 2) / 2;

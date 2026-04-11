@@ -2,14 +2,15 @@
 // Service Worker — кэширует файлы для работы офлайн
 // ============================================================
 
-const CACHE_NAME = 'bench100-v15';
+const CACHE_NAME = 'bench100-v16';
 const URLS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './program-data.js',
-  './manifest.json'
+  './manifest.json',
+  'https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap'
 ];
 
 // Установка: кэшируем все файлы
