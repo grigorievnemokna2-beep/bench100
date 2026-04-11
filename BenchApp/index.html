@@ -93,20 +93,15 @@
     </div>
     <!-- Таймер -->
     <div id="timer-section" class="timer-section">
-      <div class="timer-ring-wrap" id="timer-ring-wrap">
-        <svg class="timer-ring" viewBox="0 0 200 200">
-          <circle class="timer-ring-bg" cx="100" cy="100" r="88" fill="none"/>
-          <circle class="timer-ring-progress" id="timer-ring-progress" cx="100" cy="100" r="88" fill="none"/>
-        </svg>
+      <div class="timer-progress-bar"><div class="timer-progress-fill" id="timer-progress-fill"></div></div>
+      <div class="timer-row-main">
         <div class="timer-display" id="timer-display" onclick="App.editTimerManual()">0:00</div>
-      </div>
-      <div class="timer-adjust">
-        <button class="timer-adj-btn" onclick="App.adjustTimer(-30)">-30</button>
-        <button class="timer-adj-btn" onclick="App.adjustTimer(-15)">-15</button>
-        <button class="timer-adj-btn" onclick="App.adjustTimer(-5)">-5</button>
-        <button class="timer-adj-btn plus" onclick="App.adjustTimer(5)">+5</button>
-        <button class="timer-adj-btn plus" onclick="App.adjustTimer(15)">+15</button>
-        <button class="timer-adj-btn plus" onclick="App.adjustTimer(30)">+30</button>
+        <div class="timer-adjust">
+          <button class="timer-adj-btn" onclick="App.adjustTimer(-15)">-15</button>
+          <button class="timer-adj-btn" onclick="App.adjustTimer(-5)">-5</button>
+          <button class="timer-adj-btn plus" onclick="App.adjustTimer(5)">+5</button>
+          <button class="timer-adj-btn plus" onclick="App.adjustTimer(15)">+15</button>
+        </div>
       </div>
       <div class="timer-controls">
         <button class="timer-btn" onclick="App.setTimer(60)">1:00</button>

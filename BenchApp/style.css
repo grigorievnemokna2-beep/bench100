@@ -94,13 +94,13 @@ body {
 .header {
   display: flex;
   align-items: center;
-  padding: 14px 20px;
-  padding-top: calc(14px + var(--safe-top));
+  padding: 10px 16px;
+  padding-top: calc(10px + var(--safe-top));
   background: rgba(10, 10, 12, 0.92);
   backdrop-filter: saturate(180%) blur(24px);
   -webkit-backdrop-filter: saturate(180%) blur(24px);
-  min-height: 56px;
-  gap: 12px;
+  min-height: 46px;
+  gap: 10px;
   flex-shrink: 0;
   position: relative;
   z-index: 10;
@@ -116,7 +116,7 @@ body {
 
 .header h1 {
   font-family: 'Oswald', sans-serif;
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 600;
   flex: 1;
   text-transform: uppercase;
@@ -267,8 +267,8 @@ body {
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
-  padding-bottom: calc(100px + var(--safe-bottom));
+  padding: 10px;
+  padding-bottom: calc(80px + var(--safe-bottom));
   -webkit-overflow-scrolling: touch;
 }
 
@@ -361,8 +361,8 @@ body {
 .cycle-card {
   background: var(--surface);
   border-radius: var(--r-lg);
-  padding: 20px 22px;
-  margin-bottom: 10px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
   cursor: pointer;
   transition: transform 0.15s, opacity 0.15s;
   position: relative;
@@ -383,7 +383,7 @@ body {
 }
 .cycle-card h3 {
   font-family: 'Oswald', sans-serif;
-  font-size: 19px;
+  font-size: 16px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -432,8 +432,8 @@ body {
 .week-card {
   background: var(--surface);
   border-radius: var(--r-lg);
-  padding: 18px 20px;
-  margin-bottom: 10px;
+  padding: 12px 14px;
+  margin-bottom: 6px;
   position: relative;
   overflow: hidden;
   transition: transform 0.15s, opacity 0.15s;
@@ -483,7 +483,7 @@ body {
 .day-chip {
   flex: 1;
   text-align: center;
-  padding: 14px 8px;
+  padding: 10px 6px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -510,8 +510,8 @@ body {
 .exercise-card {
   background: var(--surface);
   border-radius: var(--r-md);
-  padding: 16px 18px;
-  margin-bottom: 8px;
+  padding: 12px 14px;
+  margin-bottom: 6px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -771,8 +771,8 @@ body {
 .set-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 10px 12px;
   background: var(--surface);
   border-radius: var(--r-md);
   margin-bottom: 6px;
@@ -784,8 +784,8 @@ body {
 }
 
 .set-number {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -801,7 +801,7 @@ body {
 
 .set-weight {
   font-family: 'Oswald', sans-serif;
-  font-size: 21px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--accent);
 }
@@ -847,8 +847,8 @@ body {
 
 /* Checkmark — белый круг, чёрная галочка */
 .set-check {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border: 2px solid var(--line-solid);
   border-radius: 50%;
   background: transparent;
@@ -938,96 +938,67 @@ body {
   box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
-/* ============ TIMER ============ */
+/* ============ TIMER (compact) ============ */
 .timer-section {
   position: sticky;
   bottom: 0;
-  background: rgba(14, 14, 18, 0.82);
+  background: rgba(14, 14, 18, 0.85);
   backdrop-filter: saturate(200%) blur(40px);
   -webkit-backdrop-filter: saturate(200%) blur(40px);
   border-top: 1px solid rgba(255, 255, 255, 0.04);
-  padding: 16px 16px;
-  padding-bottom: calc(16px + var(--safe-bottom));
+  padding: 8px 12px;
+  padding-bottom: calc(8px + var(--safe-bottom));
   flex-shrink: 0;
   transition: background 0.3s;
 }
 .timer-section.timer-active {
-  background: rgba(14, 14, 18, 0.88);
+  border-top-color: rgba(205, 255, 0, 0.1);
+}
+.timer-section.timer-warning {
+  border-top-color: rgba(255, 149, 0, 0.15);
 }
 
-/* Ring container */
-.timer-ring-wrap {
-  position: relative;
-  width: 164px;
-  height: 164px;
-  margin: 0 auto 14px;
+.timer-progress-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--r-pill);
+  margin-bottom: 8px;
+  overflow: hidden;
 }
-.timer-ring-wrap::before {
-  content: '';
-  position: absolute;
-  inset: -24px;
-  background: radial-gradient(circle, rgba(205, 255, 0, 0.03), transparent 65%);
-  pointer-events: none;
-  transition: all 0.4s ease;
-}
-.timer-section.timer-active .timer-ring-wrap::before {
-  background: radial-gradient(circle, rgba(205, 255, 0, 0.1), transparent 65%);
-}
-.timer-section.timer-warning .timer-ring-wrap::before {
-  background: radial-gradient(circle, rgba(255, 149, 0, 0.12), transparent 65%);
-}
-
-.timer-ring {
-  position: absolute;
-  inset: 0;
-  width: 100%;
+.timer-progress-fill {
   height: 100%;
-  transform: rotate(-90deg);
+  background: var(--accent);
+  border-radius: var(--r-pill);
+  transition: width 0.3s ease, background 0.3s;
+  width: 0%;
+  box-shadow: 0 0 6px rgba(205, 255, 0, 0.3);
 }
-.timer-ring-bg {
-  stroke: rgba(255, 255, 255, 0.06);
-  stroke-width: 4;
-}
-.timer-ring-progress {
-  stroke: var(--accent);
-  stroke-width: 5;
-  stroke-linecap: round;
-  stroke-dasharray: 553;
-  stroke-dashoffset: 553;
-  transition: stroke-dashoffset 0.3s ease, stroke 0.3s;
-  filter: drop-shadow(0 0 4px rgba(205, 255, 0, 0.15));
-}
-.timer-section.timer-active .timer-ring-progress {
-  filter: drop-shadow(0 0 10px rgba(205, 255, 0, 0.4));
-}
-.timer-section.timer-warning .timer-ring-progress {
-  stroke: var(--warn);
-  filter: drop-shadow(0 0 12px rgba(255, 149, 0, 0.5));
-}
-.timer-section.timer-done .timer-ring-progress {
-  stroke: var(--accent);
-  filter: drop-shadow(0 0 16px rgba(205, 255, 0, 0.6));
+.timer-section.timer-warning .timer-progress-fill {
+  background: var(--warn);
+  box-shadow: 0 0 8px rgba(255, 149, 0, 0.4);
 }
 
-.timer-display {
-  position: absolute;
-  inset: 0;
+.timer-row-main {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.timer-display {
   font-family: 'Oswald', sans-serif;
-  font-size: 52px;
+  font-size: 36px;
   font-weight: 500;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   color: var(--t3);
   cursor: pointer;
   line-height: 1;
-  transition: color 0.3s, text-shadow 0.3s;
+  min-width: 80px;
+  text-align: center;
+  transition: color 0.3s;
 }
-.timer-display.running {
-  color: var(--t1);
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
-}
+.timer-display.running { color: var(--t1); }
 .timer-display.warning {
   color: var(--warn);
   animation: timerPulse 0.8s infinite alternate;
@@ -1035,93 +1006,23 @@ body {
 .timer-display.done {
   color: var(--accent);
   animation: timerPulse 0.4s infinite alternate;
-  text-shadow: 0 0 24px rgba(205, 255, 0, 0.3);
 }
 @keyframes timerPulse {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0.4; transform: scale(0.97); }
+  from { opacity: 1; }
+  to { opacity: 0.35; }
 }
 
-.timer-controls {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-.timer-btn {
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--r-pill);
-  color: var(--t2);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.timer-btn:active, .timer-btn.active {
-  background: var(--accent);
-  color: #000;
-  border-color: var(--accent);
-}
-
-.timer-actions {
-  display: flex;
-  gap: 8px;
-}
-.btn-timer-start {
-  flex: 2;
-  padding: 15px;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--r-pill);
-  color: #000;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s;
-  letter-spacing: 0.5px;
-}
-.btn-timer-start:active { opacity: 0.7; transform: scale(0.97); }
-.btn-timer-start.running {
-  background: rgba(255, 149, 0, 0.9);
-  color: #000;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.btn-timer-reset {
-  flex: 1;
-  padding: 15px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--r-pill);
-  color: var(--t2);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.btn-timer-reset:active { opacity: 0.4; }
-
-/* Timer adjust */
 .timer-adjust {
   display: flex;
-  gap: 5px;
-  justify-content: center;
-  margin-bottom: 8px;
+  gap: 4px;
 }
 .timer-adj-btn {
-  padding: 6px 13px;
+  padding: 5px 10px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: var(--r-pill);
   color: var(--accent);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.12s;
@@ -1133,6 +1034,65 @@ body {
 .timer-adj-btn.plus {
   color: var(--t1);
 }
+
+.timer-controls {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+.timer-btn {
+  padding: 6px 13px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--r-pill);
+  color: var(--t2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.timer-btn:active, .timer-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+.timer-actions {
+  display: flex;
+  gap: 6px;
+}
+.btn-timer-start {
+  flex: 2;
+  padding: 12px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--r-pill);
+  color: #000;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-timer-start:active { opacity: 0.7; transform: scale(0.97); }
+.btn-timer-start.running {
+  background: rgba(255, 149, 0, 0.9);
+  color: #000;
+}
+
+.btn-timer-reset {
+  flex: 1;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--r-pill);
+  color: var(--t2);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-timer-reset:active { opacity: 0.4; }
 
 /* Editable weights */
 .set-weight.editable {

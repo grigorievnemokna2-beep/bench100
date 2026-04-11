@@ -1280,6 +1280,7 @@ const App = {
       this.timerEndAt = null;
       clearInterval(this.timerInterval);
       this.releaseWakeLock();
+      this.stopMediaSession();
       const btn = document.getElementById('btn-timer-toggle');
       btn.textContent = 'Старт';
       btn.classList.remove('running');
@@ -1296,6 +1297,7 @@ const App = {
       this.timerRunning = true;
       this.timerEndAt = Date.now() + this.timerSeconds * 1000;
       this.requestWakeLock();
+      this.startMediaSession();
       const btn = document.getElementById('btn-timer-toggle');
       btn.textContent = 'Пауза';
       btn.classList.add('running');
@@ -1322,6 +1324,7 @@ const App = {
     this.timerRunning = false;
     this.timerEndAt = null;
     this.releaseWakeLock();
+    this.stopMediaSession();
     this.timerSeconds = this.timerTarget || 0;
     this.updateTimerDisplay();
 
@@ -1359,12 +1362,15 @@ const App = {
       section.classList.add('timer-done');
     }
 
-    // Ring progress
-    if (ring) {
-      const circumference = 2 * Math.PI * 88;
-      const progress = this.timerTarget > 0 ? this.timerSeconds / this.timerTarget : 0;
-      ring.style.strokeDashoffset = circumference * (1 - progress);
+    // Progress bar
+    const bar = document.getElementById('timer-progress-fill');
+    if (bar) {
+      const pct = this.timerTarget > 0 ? (this.timerSeconds / this.timerTarget) * 100 : 0;
+      bar.style.width = pct + '%';
     }
+
+    // Media Session update
+    this.updateMediaSession();
   },
 
   timerFinished() {
@@ -1372,8 +1378,9 @@ const App = {
     display.classList.add('done');
     display.textContent = '0:00';
 
-    // Release wake lock
+    // Release wake lock & media session
     this.releaseWakeLock();
+    this.stopMediaSession();
 
     // Вибрация
     if (navigator.vibrate) {
@@ -1410,6 +1417,67 @@ const App = {
       playBeep(880, ctx.currentTime + 0.2, 0.15);
       playBeep(1200, ctx.currentTime + 0.4, 0.3);
     } catch (e) {}
+  },
+
+  // ==================== MEDIA SESSION (экран блокировки) ====================
+  _createSilentAudio() {
+    const sr = 8000, len = sr;
+    const buf = new ArrayBuffer(44 + len);
+    const v = new DataView(buf);
+    const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + len, true); w(8, 'WAVE');
+    w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+    v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr, true);
+    v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+    w(36, 'data'); v.setUint32(40, len, true);
+    for (let i = 0; i < len; i++) v.setUint8(44 + i, 128);
+    const audio = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' })));
+    audio.loop = true;
+    return audio;
+  },
+
+  startMediaSession() {
+    try {
+      if (!this._silentAudio) this._silentAudio = this._createSilentAudio();
+      this._silentAudio.play().catch(() => {});
+      if ('mediaSession' in navigator) {
+        const t = this._formatTimer(this.timerSeconds);
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: 'Отдых — ' + t,
+          artist: 'Bench 100',
+          album: 'Следующий подход',
+          artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }]
+        });
+        navigator.mediaSession.setActionHandler('pause', () => { if (this.timerRunning) this.toggleTimer(); });
+        navigator.mediaSession.setActionHandler('play', () => { if (!this.timerRunning) this.toggleTimer(); });
+      }
+    } catch (e) {}
+  },
+
+  updateMediaSession() {
+    try {
+      if ('mediaSession' in navigator && navigator.mediaSession.metadata && this.timerRunning) {
+        navigator.mediaSession.metadata.title = 'Отдых — ' + this._formatTimer(this.timerSeconds);
+      }
+    } catch (e) {}
+  },
+
+  stopMediaSession() {
+    try {
+      if (this._silentAudio) {
+        this._silentAudio.pause();
+        this._silentAudio.currentTime = 0;
+      }
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = null;
+      }
+    } catch (e) {}
+  },
+
+  _formatTimer(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m + ':' + s.toString().padStart(2, '0');
   },
 
   // Wake Lock — не гасить экран пока таймер работает
