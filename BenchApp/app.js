@@ -29,6 +29,7 @@ const App = {
   init() {
     this.loadData();
     this.showCycles();
+    this.initModalKeys();
 
     // Запрашиваем разрешение на уведомления (для таймера на экране блокировки)
     if ('Notification' in window && Notification.permission === 'default') {
@@ -120,23 +121,23 @@ const App = {
       try {
         const imported = JSON.parse(e.target.result);
         if (!imported.cycles || !Array.isArray(imported.cycles)) {
-          alert('Неверный формат файла');
+          this.showToast('Неверный формат файла');
           return;
         }
         const valid = imported.cycles.every(c =>
           c && typeof c === 'object' && c.id && typeof c.maxWeight === 'number' && c.maxWeight > 0
         );
         if (!valid) {
-          alert('Файл содержит повреждённые данные проходок');
+          this.showToast('Файл содержит повреждённые данные');
           return;
         }
         if (!confirm(`Восстановить данные? (${imported.cycles.length} проходок)\nТекущие данные будут заменены.`)) return;
         this.data = imported;
         this.saveData();
         this.showCycles();
-        alert('Данные восстановлены!');
+        this.showToast('Данные восстановлены!');
       } catch (err) {
-        alert('Ошибка чтения файла');
+        this.showToast('Ошибка чтения файла');
       }
     };
     reader.readAsText(file);
@@ -171,13 +172,12 @@ const App = {
   },
 
   goBack() {
-    // Универсальная кнопка назад
     if (this.currentExIndex !== null) {
       this.showDay();
-    } else if (this.currentDay !== null) {
+    } else if (this.currentWeek !== null && this.currentDay !== null) {
       this.showWeeks();
     } else if (this.currentCycleId !== null) {
-      this.showWeeks();
+      this.showCycles();
     } else {
       this.showCycles();
     }
@@ -315,7 +315,7 @@ const App = {
     const maxWeight = parseFloat(document.getElementById('cycle-max').value);
 
     if (!maxWeight || maxWeight <= 0) {
-      alert('Укажи свой максимум в жиме лёжа!');
+      this.showToast('Укажи свой максимум в жиме лёжа!');
       return;
     }
 
@@ -485,7 +485,30 @@ const App = {
   renderExercises(dayData, workout, maxWeight, skipHtml = '') {
     const container = document.getElementById('exercises-list');
 
-    let html = skipHtml;
+    // Day summary
+    let totalEx = dayData.exercises.length;
+    let doneEx = 0;
+    let totalSetsAll = 0;
+    let doneSetsAll = 0;
+    dayData.exercises.forEach((ex, idx) => {
+      const s = workout && workout.exercises ? workout.exercises[idx] : null;
+      const ts = this.getTotalSets(ex);
+      const ds = s ? (s.completedSets || 0) : 0;
+      totalSetsAll += ts;
+      doneSetsAll += ds;
+      if (ds >= ts && ts > 0) doneEx++;
+    });
+
+    let html = '';
+    if (totalSetsAll > 0) {
+      html += `<div class="day-summary">
+        <div class="day-summary-stat"><div class="day-summary-val">${doneEx}/${totalEx}</div><div class="day-summary-label">упражнений</div></div>
+        <div class="day-summary-stat"><div class="day-summary-val">${doneSetsAll}/${totalSetsAll}</div><div class="day-summary-label">подходов</div></div>
+        <div class="day-summary-stat"><div class="day-summary-val">${totalSetsAll > 0 ? Math.round((doneSetsAll / totalSetsAll) * 100) : 0}%</div><div class="day-summary-label">выполнено</div></div>
+      </div>`;
+    }
+
+    html += skipHtml;
     html += dayData.exercises.map((ex, idx) => {
       const saved = workout && workout.exercises ? workout.exercises[idx] : null;
       const baseCls = ex.isBase ? 'base-exercise' : '';
@@ -905,7 +928,7 @@ const App = {
     this.renderSets();
 
     // Auto-start rest timer when marking set as done
-    if (exData.sets[setIdx] && exData.sets[setIdx].done && !isSuperset) {
+    if (exData.sets[setIdx] && exData.sets[setIdx].done) {
       if (!this.timerRunning) {
         const weekData = PROGRAM.find(w => w.week === this.currentWeek);
         const dayData = weekData.days.find(d => d.day === this.currentDay);
@@ -1050,6 +1073,18 @@ const App = {
     // Также обновляем общий вес (последний введённый)
     exData.weight = weight;
 
+    // Auto-fill remaining empty sets with this weight
+    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const dayData = weekData.days.find(d => d.day === this.currentDay);
+    const curEx = isSuperset
+      ? dayData.exercises[this.currentExIndex].superset
+      : dayData.exercises[this.currentExIndex];
+    if (curEx && curEx.isIndividual && curEx.sets) {
+      for (let i = setIdx + 1; i < curEx.sets; i++) {
+        if (!exData.setWeights[i]) exData.setWeights[i] = weight;
+      }
+    }
+
     this.saveData();
     this.renderSets();
   },
@@ -1066,10 +1101,24 @@ const App = {
     input.value = newVal;
   },
 
+  initModalKeys() {
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const modals = ['modal-weight', 'modal-max', 'modal-name', 'modal-timer', 'modal-reps'];
+      for (const id of modals) {
+        if (!document.getElementById(id).classList.contains('hidden')) {
+          e.preventDefault();
+          document.getElementById(id).querySelector('.btn-primary').click();
+          return;
+        }
+      }
+    });
+  },
+
   saveWeight() {
     const weight = parseFloat(document.getElementById('modal-weight-input').value);
     if (!weight || weight <= 0) {
-      alert('Введи корректный вес!');
+      this.showToast('Введи корректный вес!');
       return;
     }
 
@@ -2516,6 +2565,21 @@ const App = {
     svg += `<circle cx="${sx(li).toFixed(1)}" cy="${sy(values[li]).toFixed(1)}" r="2.5" fill="${c}"/>`;
     svg += '</svg>';
     return svg;
+  },
+
+  // ==================== TOAST ====================
+  showToast(text, duration = 2500) {
+    let toast = document.getElementById('app-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'app-toast';
+      toast.className = 'app-toast';
+      document.body.appendChild(toast);
+    }
+    clearTimeout(this._toastTimeout);
+    toast.textContent = text;
+    toast.classList.add('visible');
+    this._toastTimeout = setTimeout(() => toast.classList.remove('visible'), duration);
   },
 
   // ==================== УТИЛИТЫ ====================
