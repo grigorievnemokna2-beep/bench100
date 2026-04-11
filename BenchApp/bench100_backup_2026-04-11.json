@@ -1,0 +1,2048 @@
+{
+  "cycles": [
+    {
+      "id": "1771088786866",
+      "name": "Проходка 1",
+      "maxWeight": 62.5,
+      "createdAt": "2026-02-14T17:06:26.867Z",
+      "workouts": {
+        "1-Пн": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-16T08:47:09.229Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-16T08:47:09.682Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-16T08:47:10.045Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-16T08:47:10.347Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-16T08:47:10.614Z"
+                }
+              },
+              "completedSets": 5
+            }
+          },
+          "date": "2026-02-16T08:47:09.227Z",
+          "completed": false
+        },
+        "6-Пн": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:22:17.843Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:26:03.996Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:31:21.576Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:34:50.658Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:38:33.857Z"
+                },
+                "5": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:42:34.175Z"
+                },
+                "6": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:46:02.588Z"
+                },
+                "7": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:49:50.080Z"
+                },
+                "8": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:53:32.671Z"
+                },
+                "9": {
+                  "done": true,
+                  "timestamp": "2026-02-18T04:57:20.676Z"
+                }
+              },
+              "completedSets": 10
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:01:03.881Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:03:57.190Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:06:54.994Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:12:44.875Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:15:42.055Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 14
+              },
+              "weight": 14
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:18:08.393Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:20:36.917Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:24:14.670Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:27:13.560Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:30:17.047Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 18,
+                "1": 20
+              },
+              "weight": 20
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:34:17.043Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:36:37.776Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:38:55.508Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:41:41.682Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 20
+              },
+              "weight": 20
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:51:12.461Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:54:29.834Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:54:33.227Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:57:40.783Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 20
+              },
+              "weight": 20
+            },
+            "5": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:57:44.323Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:57:44.639Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-18T05:57:44.891Z"
+                }
+              },
+              "completedSets": 3
+            }
+          },
+          "date": "2026-02-18T04:22:17.843Z",
+          "completed": true
+        },
+        "6-Ср": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:24:23.569Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:27:03.101Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:29:41.985Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:32:05.536Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:35:08.761Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 40,
+                "4": 50
+              },
+              "weight": 50
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:21.703Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:22.322Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:22.641Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:22.958Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:23.321Z"
+                }
+              },
+              "completedSets": 5
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:37:03.345Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:40:05.244Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:43:07.190Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:46:55.329Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:50:46.616Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 12
+              },
+              "weight": 12
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:52:16.096Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:55:22.643Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-20T04:57:46.980Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:01:17.474Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 9
+              },
+              "weight": 9
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:02:37.770Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:05:03.122Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:07:56.499Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:10:50.599Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:13:18.512Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 50,
+                "1": 45,
+                "2": 45,
+                "3": 45,
+                "4": 40
+              },
+              "weight": 45
+            },
+            "5": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:09.877Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:10.299Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:10.733Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:11.130Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 10
+              },
+              "weight": 10
+            },
+            "6": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:15.912Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:16.264Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-20T05:28:16.481Z"
+                }
+              },
+              "completedSets": 3
+            }
+          },
+          "date": "2026-02-20T04:24:18.636Z",
+          "completed": true
+        },
+        "6-Пт": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-22T07:52:16.599Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-22T07:55:39.744Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-22T07:59:07.030Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:02:30.895Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:06:42.277Z"
+                },
+                "5": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:10:53.850Z"
+                },
+                "6": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:15:59.932Z"
+                },
+                "7": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:19:43.656Z"
+                },
+                "8": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:28:05.469Z"
+                },
+                "9": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:33:16.959Z"
+                },
+                "10": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:36:37.664Z"
+                },
+                "11": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:41:40.094Z"
+                }
+              },
+              "completedSets": 12,
+              "setWeights": {
+                "8": 57.5
+              },
+              "weight": 57.5
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:47:39.272Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:50:00.425Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:52:31.048Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:55:02.632Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-22T08:58:07.705Z"
+                },
+                "5": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:02:17.963Z"
+                }
+              },
+              "completedSets": 6,
+              "setWeights": {
+                "0": 15
+              },
+              "weight": 15
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:03:49.958Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:06:05.832Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:08:17.713Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:10:46.872Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:13:38.676Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 20
+              },
+              "weight": 20
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:16:47.897Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:19:44.220Z",
+                  "actualReps": 15
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-22T09:22:38.307Z"
+                }
+              },
+              "completedSets": 3,
+              "setWeights": {
+                "0": 50,
+                "1": 70,
+                "2": 60
+              },
+              "weight": 60
+            }
+          },
+          "date": "2026-02-22T07:52:16.599Z",
+          "completed": true
+        },
+        "7-Пн": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:23:50.419Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:27:17.317Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:31:02.813Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:34:43.706Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:38:20.629Z"
+                },
+                "5": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:41:27.059Z"
+                },
+                "6": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:45:30.049Z"
+                },
+                "7": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:47:58.019Z"
+                }
+              },
+              "completedSets": 8
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:50:45.118Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:54:13.202Z"
+                }
+              },
+              "completedSets": 2
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-25T04:58:03.295Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:02:28.878Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:06:07.012Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:09:58.242Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 20
+              },
+              "weight": 20
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:12:19.347Z"
+                },
+                "1": {
+                  "actualReps": 7,
+                  "done": true,
+                  "timestamp": "2026-02-25T05:14:57.471Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:17:24.266Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:20:05.630Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:22:12.411Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 17.5,
+                "1": 25,
+                "2": 22.5
+              },
+              "weight": 22.5
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:25:06.749Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:27:25.037Z",
+                  "actualReps": 7
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:30:00.198Z",
+                  "actualReps": 7
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:31:58.246Z",
+                  "actualReps": 5
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:33:43.651Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 20
+              },
+              "weight": 20
+            },
+            "5": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:37:56.199Z",
+                  "actualReps": 20
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:40:33.246Z",
+                  "actualReps": 11
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:43:08.539Z",
+                  "actualReps": 10
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:44:58.791Z",
+                  "actualReps": 11
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 20
+              },
+              "weight": 20
+            },
+            "6": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:36:46.332Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:36:46.615Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-25T05:36:46.834Z"
+                }
+              },
+              "completedSets": 3
+            }
+          },
+          "date": "2026-02-25T04:23:50.419Z",
+          "completed": true
+        },
+        "7-Ср": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:31:45.491Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:36:28.055Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:39:21.180Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:42:22.536Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:46:26.411Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 10,
+                "1": 10
+              },
+              "weight": 10
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:25:03.995Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:27:30.116Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:30:11.745Z"
+                }
+              },
+              "completedSets": 3,
+              "setWeights": {
+                "0": 60
+              },
+              "weight": 60
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:47:45.949Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:50:25.073Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:52:53.868Z"
+                },
+                "3": {
+                  "actualReps": 9,
+                  "done": true,
+                  "timestamp": "2026-02-27T04:55:53.981Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-27T04:59:09.178Z",
+                  "actualReps": 8
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 9
+              },
+              "weight": 9
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-02-27T05:19:24.846Z",
+                  "actualReps": 5
+                },
+                "1": {
+                  "actualReps": 8,
+                  "done": true,
+                  "timestamp": "2026-02-27T05:17:57.931Z"
+                },
+                "2": {
+                  "actualReps": 8,
+                  "done": true,
+                  "timestamp": "2026-02-27T05:20:37.279Z"
+                },
+                "3": {
+                  "actualReps": 8,
+                  "done": true,
+                  "timestamp": "2026-02-27T05:23:17.547Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-02-27T05:26:29.492Z",
+                  "actualReps": 8
+                }
+              },
+              "completedSets": 5,
+              "superset": {
+                "sets": {
+                  "0": {
+                    "done": true,
+                    "timestamp": "2026-02-27T05:00:43.507Z"
+                  },
+                  "1": {
+                    "actualReps": 9,
+                    "done": true,
+                    "timestamp": "2026-02-27T05:03:25.986Z"
+                  },
+                  "2": {
+                    "actualReps": 7,
+                    "done": true,
+                    "timestamp": "2026-02-27T05:06:21.748Z"
+                  },
+                  "3": {
+                    "done": true,
+                    "timestamp": "2026-02-27T05:10:18.367Z",
+                    "actualReps": 7
+                  },
+                  "4": {
+                    "actualReps": 7,
+                    "done": true,
+                    "timestamp": "2026-02-27T05:14:18.535Z"
+                  }
+                },
+                "completedSets": 5,
+                "setWeights": {
+                  "0": 45
+                },
+                "weight": 45
+              },
+              "setWeights": {
+                "0": 45,
+                "1": 40,
+                "2": 40
+              },
+              "weight": 40
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "actualReps": 15,
+                  "done": true,
+                  "timestamp": "2026-02-27T05:28:34.007Z"
+                },
+                "1": {
+                  "actualReps": 15,
+                  "done": true,
+                  "timestamp": "2026-02-27T05:31:35.880Z"
+                },
+                "2": {
+                  "actualReps": 15,
+                  "done": true,
+                  "timestamp": "2026-02-27T05:36:49.055Z"
+                },
+                "3": {
+                  "actualReps": 15,
+                  "done": true,
+                  "timestamp": "2026-02-27T05:45:46.492Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 10
+              },
+              "weight": 10
+            }
+          },
+          "date": "2026-02-27T04:24:58.289Z",
+          "completed": true
+        },
+        "7-Пт": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:21:06.908Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:24:51.459Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:27:21.567Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:31:20.918Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:34:58.525Z"
+                },
+                "5": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:38:21.913Z"
+                },
+                "6": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:41:43.702Z"
+                },
+                "7": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:45:11.958Z"
+                }
+              },
+              "completedSets": 8
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:47:50.530Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:50:31.334Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:53:50.067Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:56:57.469Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-03-01T10:58:59.359Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 12.5
+              },
+              "weight": 12.5
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:03:15.427Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:06:34.009Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:10:44.126Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:15:04.928Z"
+                }
+              },
+              "completedSets": 4
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:18:08.272Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:20:43.441Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:23:14.736Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:25:37.579Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:27:25.196Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 25
+              },
+              "weight": 25
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:31:06.129Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:34:14.754Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-01T11:35:59.083Z"
+                }
+              },
+              "completedSets": 3,
+              "setWeights": {
+                "0": 15
+              },
+              "weight": 15
+            }
+          },
+          "date": "2026-03-01T10:21:06.908Z",
+          "completed": true
+        },
+        "8-Пн": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:03:42.549Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:07:22.525Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:11:16.805Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:12:08.382Z"
+                }
+              },
+              "completedSets": 4,
+              "superset": {
+                "sets": {
+                  "0": {
+                    "done": true,
+                    "timestamp": "2026-03-18T05:00:41.698Z"
+                  },
+                  "1": {
+                    "done": true,
+                    "timestamp": "2026-03-18T05:02:49.624Z"
+                  },
+                  "2": {
+                    "done": true,
+                    "timestamp": "2026-03-18T05:07:26.821Z"
+                  },
+                  "3": {
+                    "done": true,
+                    "timestamp": "2026-03-18T05:11:18.513Z"
+                  }
+                },
+                "completedSets": 4,
+                "setWeights": {
+                  "0": 20
+                },
+                "weight": 20
+              }
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-18T04:45:54.948Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-18T04:49:20.694Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-18T04:52:10.524Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-18T04:54:49.613Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-03-18T04:57:41.563Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 14
+              },
+              "weight": 14
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:18:41.850Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:21:06.254Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:23:57.844Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:27:17.847Z"
+                }
+              },
+              "completedSets": 4,
+              "superset": {
+                "sets": {
+                  "0": {
+                    "done": true,
+                    "timestamp": "2026-03-18T05:16:12.807Z"
+                  },
+                  "1": {
+                    "done": true,
+                    "timestamp": "2026-03-18T05:19:32.176Z"
+                  },
+                  "2": {
+                    "done": true,
+                    "timestamp": "2026-03-18T05:22:20.036Z",
+                    "actualReps": 8
+                  },
+                  "3": {
+                    "actualReps": 5,
+                    "done": true,
+                    "timestamp": "2026-03-18T05:26:31.847Z"
+                  }
+                },
+                "completedSets": 4,
+                "setWeights": {
+                  "0": 20
+                },
+                "weight": 20
+              },
+              "setWeights": {
+                "0": 22.5
+              },
+              "weight": 22.5
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:30:15.503Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:32:58.700Z",
+                  "actualReps": 12
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-18T05:35:45.918Z",
+                  "actualReps": 13
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-20T03:14:20.715Z",
+                  "actualReps": 10
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 17.5
+              },
+              "weight": 17.5
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-20T03:14:36.206Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-20T03:14:36.591Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-20T03:14:36.859Z"
+                }
+              },
+              "completedSets": 3
+            }
+          },
+          "date": "2026-03-18T04:45:01.185Z",
+          "completed": true
+        },
+        "8-Ср": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:48:30.741Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:48:31.164Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:48:31.477Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:48:31.745Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 10
+              },
+              "weight": 10
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:48:55.627Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:48:55.923Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:48:56.226Z"
+                }
+              },
+              "completedSets": 3,
+              "setWeights": {
+                "0": 60
+              },
+              "weight": 60
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:17.496Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:17.875Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:18.178Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:18.484Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:18.745Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 9
+              },
+              "weight": 9
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:31.703Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:32.031Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:32.337Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:32.607Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-03-20T06:49:47.713Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 40
+              },
+              "weight": 40,
+              "superset": {
+                "sets": {
+                  "0": {
+                    "done": true,
+                    "timestamp": "2026-03-20T06:49:52.467Z"
+                  },
+                  "1": {
+                    "done": true,
+                    "timestamp": "2026-03-20T06:49:53.738Z"
+                  },
+                  "2": {
+                    "done": true,
+                    "timestamp": "2026-03-20T06:49:54.136Z"
+                  },
+                  "3": {
+                    "done": true,
+                    "timestamp": "2026-03-20T06:49:54.387Z"
+                  },
+                  "4": {
+                    "done": true,
+                    "timestamp": "2026-03-20T06:49:55.829Z"
+                  }
+                },
+                "completedSets": 5,
+                "setWeights": {
+                  "0": 40
+                },
+                "weight": 40
+              }
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:50.961Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:51.346Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:51.648Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:51.881Z"
+                }
+              },
+              "completedSets": 4
+            },
+            "5": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:54.157Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:54.443Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:54.675Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:54.933Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-03-20T18:40:55.128Z"
+                }
+              },
+              "completedSets": 5
+            }
+          },
+          "date": "2026-03-20T06:48:30.741Z",
+          "completed": true
+        }
+      }
+    },
+    {
+      "id": "1774996793181",
+      "name": "Проходка 2",
+      "maxWeight": 72.5,
+      "createdAt": "2026-03-31T22:39:53.181Z",
+      "workouts": {
+        "1-Пн": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:23:16.883Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:26:56.453Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:30:13.932Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:33:44.884Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:37:23.444Z"
+                }
+              },
+              "completedSets": 5
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:53:58.543Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:57:07.056Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:59:37.019Z",
+                  "actualReps": 7
+                },
+                "3": {
+                  "actualReps": 5,
+                  "done": true,
+                  "timestamp": "2026-04-01T06:02:24.967Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 14
+              },
+              "weight": 14
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:41:04.994Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:44:36.049Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:47:51.601Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-01T05:51:39.000Z"
+                }
+              },
+              "completedSets": 4
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-01T06:04:00.734Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-01T06:06:30.482Z",
+                  "actualReps": 8
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-01T06:09:13.320Z",
+                  "actualReps": 8
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-01T06:11:52.024Z",
+                  "actualReps": 5
+                },
+                "4": {
+                  "actualReps": 5,
+                  "done": true,
+                  "timestamp": "2026-04-01T06:30:40.544Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 10
+              },
+              "weight": 10
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-01T06:30:44.920Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-01T06:30:45.236Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-01T06:30:45.459Z"
+                }
+              },
+              "completedSets": 3
+            }
+          },
+          "date": "2026-04-01T05:23:16.883Z",
+          "completed": true
+        },
+        "1-Ср": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-03T04:48:09.853Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-03T04:51:42.332Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-03T04:55:19.656Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-03T04:59:10.902Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-04-03T05:03:34.549Z"
+                }
+              },
+              "completedSets": 5
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "actualReps": 10,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:05:45.874Z"
+                },
+                "1": {
+                  "actualReps": 10,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:09:22.052Z"
+                },
+                "2": {
+                  "actualReps": 10,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:13:12.203Z"
+                },
+                "3": {
+                  "actualReps": 10,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:16:53.360Z"
+                }
+              },
+              "completedSets": 4
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "actualReps": 10,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:18:27.325Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-03T05:26:38.834Z"
+                },
+                "2": {
+                  "actualReps": 10,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:23:53.009Z"
+                },
+                "3": {
+                  "actualReps": 10,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:26:43.490Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 40
+              },
+              "weight": 40
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "actualReps": 15,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:28:20.644Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-03T05:32:04.294Z"
+                },
+                "2": {
+                  "actualReps": 26,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:35:34.981Z"
+                },
+                "3": {
+                  "actualReps": 25,
+                  "done": true,
+                  "timestamp": "2026-04-03T05:39:12.472Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 40,
+                "1": 30
+              },
+              "weight": 30
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-05T15:33:14.245Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-05T15:33:14.651Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-05T15:33:15.029Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-05T15:33:15.303Z"
+                }
+              },
+              "completedSets": 4
+            },
+            "5": {
+              "sets": {
+                "0": {
+                  "done": true
+                }
+              },
+              "completedSets": 1,
+              "specialReps": 50
+            },
+            "6": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-05T15:33:33.091Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-05T15:33:33.320Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-05T15:33:33.561Z"
+                }
+              },
+              "completedSets": 3
+            }
+          },
+          "date": "2026-04-03T04:48:09.853Z",
+          "completed": true
+        },
+        "2-Пн": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:24:55.646Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:28:37.149Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:32:26.392Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:36:01.920Z"
+                }
+              },
+              "completedSets": 4
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:39:06.185Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:41:54.758Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:45:36.694Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:48:27.835Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:51:49.793Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 14
+              },
+              "weight": 14
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:54:23.682Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-08T04:58:00.309Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-08T05:01:43.274Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-08T05:04:23.143Z"
+                }
+              },
+              "completedSets": 4,
+              "setWeights": {
+                "0": 12,
+                "1": 14
+              },
+              "weight": 14
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-08T05:07:37.582Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-08T05:10:28.720Z"
+                },
+                "2": {
+                  "actualReps": 6,
+                  "done": true,
+                  "timestamp": "2026-04-08T05:13:04.836Z"
+                },
+                "3": {
+                  "actualReps": 6,
+                  "done": true,
+                  "timestamp": "2026-04-08T05:16:15.802Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-04-08T05:22:15.995Z",
+                  "actualReps": 5
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 10
+              },
+              "weight": 10
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-08T05:22:22.797Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-08T05:22:23.095Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-08T05:22:23.316Z"
+                }
+              },
+              "completedSets": 3
+            }
+          },
+          "date": "2026-04-08T04:24:55.646Z",
+          "completed": true
+        },
+        "2-Ср": {
+          "exercises": {
+            "0": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:27:16.155Z",
+                  "actualReps": 3
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:30:21.015Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:33:48.451Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:37:17.790Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:41:09.491Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 40,
+                "1": 30,
+                "2": 30,
+                "3": 30,
+                "4": 30
+              },
+              "weight": 30
+            },
+            "1": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:43:37.773Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:46:23.962Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:49:14.277Z"
+                },
+                "3": {
+                  "actualReps": 9,
+                  "done": true,
+                  "timestamp": "2026-04-10T04:52:43.535Z"
+                },
+                "4": {
+                  "actualReps": 8,
+                  "done": true,
+                  "timestamp": "2026-04-10T04:55:38.286Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 22.5
+              },
+              "weight": 22.5
+            },
+            "2": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:59:22.292Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:02:24.146Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:05:39.606Z",
+                  "actualReps": 10
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:08:45.605Z",
+                  "actualReps": 8
+                },
+                "4": {
+                  "actualReps": 8,
+                  "done": true,
+                  "timestamp": "2026-04-10T05:11:56.351Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 40
+              },
+              "weight": 40
+            },
+            "3": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:56:24.918Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:56:25.288Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:56:25.589Z"
+                },
+                "3": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:56:26.559Z"
+                },
+                "4": {
+                  "done": true,
+                  "timestamp": "2026-04-10T04:56:26.811Z"
+                }
+              },
+              "completedSets": 5,
+              "setWeights": {
+                "0": 30
+              },
+              "weight": 30
+            },
+            "4": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:14:29.958Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:15:57.768Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:19:01.606Z",
+                  "actualReps": 20
+                }
+              },
+              "completedSets": 3
+            },
+            "5": {
+              "sets": {
+                "0": {
+                  "done": true
+                }
+              },
+              "completedSets": 1,
+              "specialReps": 50
+            },
+            "6": {
+              "sets": {
+                "0": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:14:42.651Z"
+                },
+                "1": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:14:42.850Z"
+                },
+                "2": {
+                  "done": true,
+                  "timestamp": "2026-04-10T05:14:43.072Z"
+                }
+              },
+              "completedSets": 3
+            }
+          },
+          "date": "2026-04-10T04:27:16.155Z",
+          "completed": false
+        }
+      }
+    }
+  ],
+  "barWeight": 20,
+  "version": 1
+}
