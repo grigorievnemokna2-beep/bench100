@@ -210,6 +210,14 @@ const App = {
 
     let html = '';
 
+    // Total tonnage across all cycles
+    let grandTotalVolume = 0;
+    this.data.cycles.forEach(c => { grandTotalVolume += this.getCycleTotalVolume(c); });
+    if (grandTotalVolume > 0) {
+      const volStr = grandTotalVolume > 9999 ? (grandTotalVolume / 1000).toFixed(1) + ' т' : grandTotalVolume + ' кг';
+      html += `<div class="total-tonnage">Всего поднято: ${volStr}</div>`;
+    }
+
     // Continue button for most recent cycle
     const lastCycle = this.data.cycles[this.data.cycles.length - 1];
     const next = this.getNextWorkout(lastCycle);
@@ -229,6 +237,17 @@ const App = {
       const completedWorkouts = this.getCompletedWorkouts(cycle);
       const progressPercent = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
 
+      // Current week calculation
+      let currentWeek = 9;
+      for (const week of PROGRAM) {
+        let weekDone = true;
+        for (const day of week.days) {
+          const wo = cycle.workouts ? cycle.workouts[`${week.week}-${day.day}`] : null;
+          if (!wo || (!wo.completed && !wo.skipped)) { weekDone = false; break; }
+        }
+        if (!weekDone) { currentWeek = week.week; break; }
+      }
+
       return `
         <div class="cycle-card" onclick="App.openCycle('${cycle.id}')">
           <button class="cycle-delete" onclick="event.stopPropagation(); App.deleteCycle('${cycle.id}')" title="Удалить">&#x2715;</button>
@@ -239,6 +258,8 @@ const App = {
             <span>${completedWorkouts}/${totalWorkouts} тренировок</span>
             &nbsp;&middot;&nbsp;
             <span>${progressPercent}%</span>
+            &nbsp;&middot;&nbsp;
+            <span>Неделя ${currentWeek} из 9</span>
           </div>
           <div class="cycle-progress-bar">
             <div class="cycle-progress-fill" style="width: ${progressPercent}%"></div>
@@ -414,12 +435,22 @@ const App = {
         return `<div class="day-chip ${cls}" onclick="event.stopPropagation(); App.openDay(${week.week}, '${day.day}')">${label}</div>`;
       }).join('');
 
+      // Volume preview
+      let totalSets = 0, maxPercent = 0;
+      week.days.forEach(day => {
+        day.exercises.forEach(ex => {
+          totalSets += this.getTotalSets(ex);
+          if (ex.segments) ex.segments.forEach(s => { if (s.percent > maxPercent) maxPercent = s.percent; });
+        });
+      });
+
       return `
         <div class="week-card">
           <div class="week-header">
             <span class="week-number">Неделя ${week.week}</span>
             <span class="week-title">${week.title}</span>
           </div>
+          <span class="week-meta">${totalSets} подх. · макс ${maxPercent}%</span>
           <div class="week-days">${daysHtml}</div>
         </div>
       `;
@@ -500,12 +531,45 @@ const App = {
       if (ds >= ts && ts > 0) doneEx++;
     });
 
+    // Estimated workout duration
+    let estMinutes = 0;
+    dayData.exercises.forEach(ex => {
+      if (ex.isSpecial) return;
+      const sets = ex.segments && !ex.isIndividual
+        ? ex.segments.reduce((sum, seg) => sum + seg.sets, 0)
+        : (ex.sets || 0);
+      if (ex.isBase) {
+        estMinutes += sets * (4 + 1); // 4min rest + 1min per set
+      } else {
+        estMinutes += sets * (1.5 + 0.5); // 1.5min rest + 0.5min per set
+      }
+      if (ex.superset) {
+        estMinutes += (ex.superset.sets || 0) * (1.5 + 0.5);
+      }
+    });
+
+    // Session elapsed time
+    let sessionHtml = '';
+    if (workout && workout.startedAt) {
+      const startMs = new Date(workout.startedAt).getTime();
+      const elapsedMs = Date.now() - startMs;
+      const elapsedMin = Math.floor(elapsedMs / 60000);
+      if (elapsedMin > 0) {
+        const hrs = Math.floor(elapsedMin / 60);
+        const mins = elapsedMin % 60;
+        const elapsedStr = hrs > 0 ? `${hrs}ч ${mins}мин` : `${mins} мин`;
+        sessionHtml = `<div class="day-summary-stat session-duration"><div class="day-summary-val">${elapsedStr}</div><div class="day-summary-label">в зале</div></div>`;
+      }
+    }
+
     let html = '';
     if (totalSetsAll > 0) {
       html += `<div class="day-summary">
         <div class="day-summary-stat"><div class="day-summary-val">${doneEx}/${totalEx}</div><div class="day-summary-label">упражнений</div></div>
         <div class="day-summary-stat"><div class="day-summary-val">${doneSetsAll}/${totalSetsAll}</div><div class="day-summary-label">подходов</div></div>
         <div class="day-summary-stat"><div class="day-summary-val">${totalSetsAll > 0 ? Math.round((doneSetsAll / totalSetsAll) * 100) : 0}%</div><div class="day-summary-label">выполнено</div></div>
+        <div class="day-summary-stat"><div class="day-summary-val">~${Math.round(estMinutes)} мин</div><div class="day-summary-label">оценка</div></div>
+        ${sessionHtml}
       </div>`;
     }
 
@@ -901,6 +965,11 @@ const App = {
     const workout = cycle.workouts[workoutKey];
     if (!workout.exercises) workout.exercises = {};
 
+    // Session duration: save start time on first set checked
+    if (!workout.startedAt) {
+      workout.startedAt = new Date().toISOString();
+    }
+
     const exKey = this.currentExIndex;
     if (!workout.exercises[exKey]) {
       workout.exercises[exKey] = { sets: {}, completedSets: 0 };
@@ -1290,6 +1359,8 @@ const App = {
     this._infoRecords = records;
     this._infoAllCycles = allCycles;
     this._infoShowAll = false;
+    this._infoCurrentEx = ex;
+    this._infoCurrentCycle = cycle;
     this.renderExerciseInfoModal(ex.name, records, allCycles, false);
   },
 
@@ -1300,8 +1371,69 @@ const App = {
 
     title.textContent = name;
 
+    // 4.9 - Week phase labels
+    const phaseMap = w => {
+      if (w <= 2) return 'Объём';
+      if (w <= 4) return 'Сила';
+      if (w <= 6) return 'Интенсивность';
+      if (w <= 8) return 'Пик';
+      return 'Максимум';
+    };
+
+    // 4.6 - Today's plan section
+    let planHtml = '';
+    const curEx = this._infoCurrentEx;
+    const curCycle = this._infoCurrentCycle;
+    if (curEx) {
+      let planSets = [];
+      if (curEx.segments && !curEx.isIndividual) {
+        curEx.segments.forEach(seg => {
+          const calcW = this.roundWeight(curCycle.maxWeight * seg.percent / 100);
+          planSets.push({ weight: calcW, reps: seg.reps, sets: seg.sets });
+        });
+      } else if (curEx.isIndividual) {
+        planSets.push({ weight: 0, reps: curEx.reps, sets: curEx.sets, individual: true });
+      } else if (curEx.isBodyweight) {
+        planSets.push({ weight: 0, reps: curEx.reps, sets: curEx.sets, bodyweight: true });
+      }
+      if (planSets.length > 0) {
+        planHtml += `<div class="info-session info-plan">`;
+        planHtml += `<div class="info-session-header">
+          <span>Сегодня: Нед.${this.currentWeek} ${this.currentDay}</span>
+          <span class="info-phase">${phaseMap(this.currentWeek)}</span>
+        </div>`;
+        planHtml += `<div class="info-sets-detail">`;
+        planSets.forEach(p => {
+          if (p.individual) {
+            planHtml += `<div class="info-set-group">
+              <span class="info-set-reps">Индивид. вес</span>
+              <span class="info-set-x">&times;</span>
+              <span class="info-set-reps">${p.reps} повт.</span>
+              <span class="info-set-x">&times;</span>
+              <span class="info-set-count">${p.sets} подх.</span>
+            </div>`;
+          } else if (p.bodyweight) {
+            planHtml += `<div class="info-set-group">
+              <span class="info-set-reps">${p.reps} повт.</span>
+              <span class="info-set-x">&times;</span>
+              <span class="info-set-count">${p.sets} подх.</span>
+            </div>`;
+          } else {
+            planHtml += `<div class="info-set-group">
+              <span class="info-set-weight">${p.weight} кг</span>
+              <span class="info-set-x">&times;</span>
+              <span class="info-set-reps">${p.reps} повт.</span>
+              <span class="info-set-x">&times;</span>
+              <span class="info-set-count">${p.sets} подх.</span>
+            </div>`;
+          }
+        });
+        planHtml += `</div></div>`;
+      }
+    }
+
     if (records.length === 0) {
-      body.innerHTML = '<div class="info-empty">Нет данных о предыдущих тренировках</div>';
+      body.innerHTML = planHtml + '<div class="info-empty">Нет данных о предыдущих тренировках</div>';
       modal.classList.remove('hidden');
       return;
     }
@@ -1317,14 +1449,58 @@ const App = {
       html += `<div class="info-pr">PR: ${pr} кг</div>`;
     }
 
-    displayed.forEach(r => {
+    // 4.6 - Insert today's plan before history
+    html += planHtml;
+
+    // 4.4 - Find session with max weight for PR highlight
+    let maxSessionWeight = 0;
+    let maxSessionIdx = -1;
+    displayed.forEach((r, i) => {
+      const sessionMax = Math.max(0, ...r.sets.map(s => s.weight));
+      if (sessionMax > maxSessionWeight) {
+        maxSessionWeight = sessionMax;
+        maxSessionIdx = i;
+      }
+    });
+
+    displayed.forEach((r, rIdx) => {
       const allDone = r.completedSets >= r.totalSets;
       const cycleLabel = showCycle ? `<span class="info-cycle">${this.escapeHtml(r.cycleName)}</span> ` : '';
 
-      html += `<div class="info-session">`;
+      // 4.3 - Best 1RM per session
+      let best1rm = 0;
+      r.sets.forEach(s => {
+        if (s.weight > 0) {
+          const e = this.calc1RM(s.weight, s.reps);
+          if (e > best1rm) best1rm = e;
+        }
+      });
+      const rm1Html = best1rm > 0 ? `<span class="info-1rm-val">1RM: ${best1rm} кг</span>` : '';
+
+      // 4.5 - Volume per session
+      const vol = r.sets.reduce((s, x) => s + x.weight * x.reps, 0);
+      const volHtml = vol > 0 ? `<span class="info-vol">${vol} кг</span>` : '';
+
+      // 4.8 - Color-coded completion
+      const ratio = r.totalSets > 0 ? r.completedSets / r.totalSets : 0;
+      let completionCls = '';
+      if (ratio >= 1) completionCls = 'all-done';
+      else if (ratio > 0.5) completionCls = 'half-done';
+      else completionCls = 'low-done';
+
+      // 4.9 - Phase label
+      const phase = phaseMap(r.week);
+
+      // 4.4 - PR session highlight
+      const prClass = rIdx === maxSessionIdx && maxSessionWeight > 0 ? ' info-session-pr' : '';
+
+      html += `<div class="info-session${prClass}">`;
       html += `<div class="info-session-header">
-        <span>${cycleLabel}Нед.${r.week} ${r.day}</span>
-        <span class="info-sets ${allDone ? 'all-done' : ''}">${r.completedSets}/${r.totalSets}</span>
+        <span>${cycleLabel}Нед.${r.week} ${r.day} <span class="info-phase">${phase}</span></span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          ${rm1Html}${volHtml}
+          <span class="info-sets ${completionCls}">${r.completedSets}/${r.totalSets}</span>
+        </span>
       </div>`;
 
       // Группируем подходы по весу+повторениям
@@ -1338,14 +1514,22 @@ const App = {
         }
       });
 
+      // 4.10 - Find heaviest weight group
+      let heaviestWeight = 0;
+      groups.forEach(g => { if (g.weight > heaviestWeight) heaviestWeight = g.weight; });
+
       html += `<div class="info-sets-detail">`;
       groups.forEach(g => {
+        const isBest = g.weight > 0 && g.weight === heaviestWeight;
+        const bestCls = isBest ? ' info-best-set' : '';
+        const bestTag = isBest ? '<span class="info-best-tag">лучший</span>' : '';
         if (g.weight > 0) {
-          html += `<div class="info-set-group">
+          html += `<div class="info-set-group${bestCls}">
             <span class="info-set-weight">${g.weight} кг</span>
             <span class="info-set-x">&times;</span>
             <span class="info-set-reps">${g.reps} повт.</span>
             ${g.count > 1 ? `<span class="info-set-x">&times;</span><span class="info-set-count">${g.count} подх.</span>` : ''}
+            ${bestTag}
           </div>`;
         } else {
           html += `<div class="info-set-group">
@@ -1363,7 +1547,7 @@ const App = {
       html += `<button class="info-show-all" onclick="App.toggleInfoShowAll()">Скрыть</button>`;
     }
 
-    // 1RM progression chart (Epley normalized)
+    // 4.1 - 1RM progression chart with labels (renderSvgLineChart instead of renderSparkline)
     if (records.length >= 2) {
       const rmData = records.map(r => {
         let best1RM = 0;
@@ -1388,11 +1572,7 @@ const App = {
           <span>Расчётный 1RM (Epley)</span>
           <span style="color:${trendColor};font-family:Oswald;font-weight:600">${diffStr} кг</span>
         </div>`;
-        html += `<div class="info-1rm-chart">${this.renderSparkline(rmData.map(d => d.value), { width: 280, height: 44 })}</div>`;
-        html += `<div class="info-1rm-range">
-          <span>${Math.min(...rmData.map(d => d.value))} кг</span>
-          <span>${Math.max(...rmData.map(d => d.value))} кг</span>
-        </div>`;
+        html += `<div class="info-1rm-chart">${this.renderSvgLineChart(rmData, { height: 100 })}</div>`;
         html += `</div>`;
       }
     }
@@ -1916,14 +2096,59 @@ const App = {
     let html = '';
     const isSingle = this.progressScope === 'cycle';
 
-    // 1RM hero
+    // 1RM hero with sparkline (5.5)
     const est1RM = this.getEstimated1RM(cycles);
     const maxW = isSingle ? currentCycle.maxWeight : Math.max(...cycles.map(c => c.maxWeight));
+
+    // Collect weekly best 1RM values for sparkline
+    const weekly1RMVals = [];
+    cycles.forEach(c => {
+      if (!c.workouts) return;
+      PROGRAM.forEach(week => {
+        let best1rm = 0;
+        week.days.forEach(day => {
+          const wKey = `${week.week}-${day.day}`;
+          const wo = c.workouts[wKey];
+          if (!wo || !wo.exercises || wo.skipped) return;
+          day.exercises.forEach((ex, idx) => {
+            if (ex.isSpecial) return;
+            const nm = ex.name.toLowerCase();
+            if (!nm.includes('\u0436\u0438\u043c') || !(nm.includes('\u043b\u0435\u0436\u0430') || nm.includes('\u0448\u0442\u0430\u043d\u0433'))) return;
+            const ed = wo.exercises[idx];
+            if (!ed) return;
+            if (ex.segments && !ex.isIndividual) {
+              let sn = 0;
+              ex.segments.forEach(seg => {
+                for (let s = 0; s < seg.sets; s++) {
+                  const ov = ed.setWeights && ed.setWeights[sn] !== undefined ? ed.setWeights[sn] : null;
+                  const w = ov !== null ? ov : this.roundWeight(c.maxWeight * seg.percent / 100);
+                  const done = ed.sets && ed.sets[sn] && ed.sets[sn].done;
+                  if (done) {
+                    const actualR = ed.sets[sn].actualReps !== undefined ? ed.sets[sn].actualReps : seg.reps;
+                    const e1rm = this.calc1RM(w, actualR);
+                    if (e1rm > best1rm) best1rm = e1rm;
+                  }
+                  sn++;
+                }
+              });
+            }
+          });
+        });
+        if (best1rm > 0) weekly1RMVals.push(best1rm);
+      });
+    });
+
+    let heroSparkHtml = '';
+    if (weekly1RMVals.length >= 2) {
+      heroSparkHtml = `<div class="hero-sparkline">${this.renderSparkline(weekly1RMVals, { width: 160, height: 32 })}</div>`;
+    }
+
     html += `<div class="overview-hero">
       <div class="hero-1rm">
         <div class="hero-1rm-val">${est1RM > 0 ? est1RM : maxW}</div>
-        <div class="hero-1rm-label">${est1RM > 0 ? 'РАСЧЁТНЫЙ 1RM' : 'МАКСИМУМ'} (кг)</div>
-        ${est1RM > 0 ? `<div class="hero-1rm-sub">Установленный макс: ${maxW} кг</div>` : ''}
+        <div class="hero-1rm-label">${est1RM > 0 ? '\u0420\u0410\u0421\u0427\u0401\u0422\u041D\u042B\u0419 1RM' : '\u041C\u0410\u041A\u0421\u0418\u041C\u0423\u041C'} (\u043a\u0433)</div>
+        ${heroSparkHtml}
+        ${est1RM > 0 ? `<div class="hero-1rm-sub">\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u043d\u044b\u0439 \u043c\u0430\u043a\u0441: ${maxW} \u043a\u0433</div>` : ''}
       </div>
     </div>`;
 
@@ -1960,7 +2185,141 @@ const App = {
 
     // Calendar heatmap
     if (isSingle) {
-      html += `<div class="progress-section"><h3>Календарь тренировок</h3>${this.renderCalendar(currentCycle)}</div>`;
+      html += `<div class="progress-section"><h3>\u041a\u0430\u043b\u0435\u043d\u0434\u0430\u0440\u044c \u0442\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043e\u043a</h3>${this.renderCalendar(currentCycle)}</div>`;
+    }
+
+    // 5.6 - Workout consistency stats
+    {
+      const workoutDates = [];
+      cycles.forEach(c => {
+        if (!c.workouts) return;
+        Object.values(c.workouts).forEach(wo => {
+          if (wo.date && (wo.completed || (wo.exercises && Object.keys(wo.exercises).length > 0)) && !wo.skipped) {
+            workoutDates.push(new Date(wo.date));
+          }
+        });
+      });
+      workoutDates.sort((a, b) => a - b);
+      if (workoutDates.length >= 2) {
+        const gaps = [];
+        for (let i = 1; i < workoutDates.length; i++) {
+          const diffDays = Math.round((workoutDates[i] - workoutDates[i - 1]) / (1000 * 60 * 60 * 24));
+          if (diffDays > 0) gaps.push(diffDays);
+        }
+        const avgGap = gaps.length > 0 ? (gaps.reduce((s, g) => s + g, 0) / gaps.length).toFixed(1) : 0;
+        const longestGap = gaps.length > 0 ? Math.max(...gaps) : 0;
+        html += `<div class="progress-section"><h3>\u0420\u0435\u0433\u0443\u043b\u044f\u0440\u043d\u043e\u0441\u0442\u044c</h3>
+          <div class="consistency-stats">
+            <div class="consist-item"><span class="consist-val">${workoutDates.length}</span><span class="consist-lbl">\u0434\u043d\u0435\u0439 \u0442\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043e\u043a</span></div>
+            <div class="consist-item"><span class="consist-val">${avgGap}</span><span class="consist-lbl">\u0441\u0440. \u0434\u043d\u0435\u0439 \u043c\u0435\u0436\u0434\u0443</span></div>
+            <div class="consist-item"><span class="consist-val">${longestGap}</span><span class="consist-lbl">\u043c\u0430\u043a\u0441. \u043f\u0435\u0440\u0435\u0440\u044b\u0432</span></div>
+          </div>
+        </div>`;
+      }
+    }
+
+    // 5.7 - Rep range analysis
+    {
+      const ranges = { heavy: { sets: 0, totalW: 0 }, strength: { sets: 0, totalW: 0 }, hypertrophy: { sets: 0, totalW: 0 }, endurance: { sets: 0, totalW: 0 } };
+      cycles.forEach(c => {
+        if (!c.workouts) return;
+        PROGRAM.forEach(week => {
+          week.days.forEach(day => {
+            const key = `${week.week}-${day.day}`;
+            const wo = c.workouts[key];
+            if (!wo || !wo.exercises || wo.skipped) return;
+            day.exercises.forEach((ex, idx) => {
+              if (ex.isSpecial || ex.isBodyweight) return;
+              const ed = wo.exercises[idx];
+              if (!ed) return;
+              if (ex.segments && !ex.isIndividual) {
+                let sn = 0;
+                ex.segments.forEach(seg => {
+                  const calcW = this.roundWeight(c.maxWeight * seg.percent / 100);
+                  for (let s = 0; s < seg.sets; s++) {
+                    const done = ed.sets && ed.sets[sn] && ed.sets[sn].done;
+                    if (done) {
+                      const ov = ed.setWeights && ed.setWeights[sn] !== undefined ? ed.setWeights[sn] : null;
+                      const w = ov !== null ? ov : calcW;
+                      const actualR = ed.sets[sn].actualReps !== undefined ? ed.sets[sn].actualReps : seg.reps;
+                      const bucket = actualR <= 3 ? 'heavy' : actualR <= 6 ? 'strength' : actualR <= 10 ? 'hypertrophy' : 'endurance';
+                      ranges[bucket].sets++;
+                      ranges[bucket].totalW += w;
+                    }
+                    sn++;
+                  }
+                });
+              } else if (ex.isIndividual) {
+                for (let i = 0; i < ex.sets; i++) {
+                  const done = ed.sets && ed.sets[i] && ed.sets[i].done;
+                  if (done) {
+                    const w = ed.setWeights && ed.setWeights[i] !== undefined ? ed.setWeights[i] : (ed.weight || 0);
+                    const actualR = ed.sets && ed.sets[i] && ed.sets[i].actualReps !== undefined ? ed.sets[i].actualReps : ex.reps;
+                    const bucket = actualR <= 3 ? 'heavy' : actualR <= 6 ? 'strength' : actualR <= 10 ? 'hypertrophy' : 'endurance';
+                    ranges[bucket].sets++;
+                    ranges[bucket].totalW += w;
+                  }
+                }
+              }
+            });
+          });
+        });
+      });
+      const totalSetsRange = ranges.heavy.sets + ranges.strength.sets + ranges.hypertrophy.sets + ranges.endurance.sets;
+      if (totalSetsRange > 0) {
+        const rangeItems = [
+          { key: 'heavy', label: '1-3 (\u0441\u0438\u043b\u0430)', data: ranges.heavy },
+          { key: 'strength', label: '4-6 (\u0441\u0438\u043b\u043e\u0432\u044b\u0435)', data: ranges.strength },
+          { key: 'hypertrophy', label: '7-10 (\u0433\u0438\u043f\u0435\u0440\u0442\u0440.)', data: ranges.hypertrophy },
+          { key: 'endurance', label: '11+ (\u0432\u044b\u043d\u043e\u0441\u043b.)', data: ranges.endurance }
+        ];
+        html += `<div class="progress-section"><h3>\u0414\u0438\u0430\u043f\u0430\u0437\u043e\u043d\u044b \u043f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u0439</h3><div class="rep-range-grid">`;
+        rangeItems.forEach(item => {
+          const pct = totalSetsRange > 0 ? Math.round((item.data.sets / totalSetsRange) * 100) : 0;
+          const avgW = item.data.sets > 0 ? Math.round(item.data.totalW / item.data.sets * 10) / 10 : 0;
+          html += `<div class="rep-range-item">
+            <div class="rep-range-bar-bg"><div class="rep-range-bar-fill" style="height:${pct}%"></div></div>
+            <div class="rep-range-val">${item.data.sets}</div>
+            <div class="rep-range-lbl">${item.label}</div>
+            ${avgW > 0 ? `<div class="rep-range-avg">${avgW} \u043a\u0433</div>` : ''}
+          </div>`;
+        });
+        html += `</div></div>`;
+      }
+    }
+
+    // 5.9 - Skipped workout analysis
+    {
+      const skippedList = [];
+      cycles.forEach(c => {
+        if (!c.workouts) return;
+        PROGRAM.forEach(week => {
+          week.days.forEach(day => {
+            const key = `${week.week}-${day.day}`;
+            const wo = c.workouts[key];
+            if (wo && wo.skipped) {
+              skippedList.push({
+                cycleName: c.name,
+                week: week.week,
+                day: day.day,
+                reason: wo.skipReason || ''
+              });
+            }
+          });
+        });
+      });
+      if (skippedList.length > 0) {
+        const showCycleLabel = cycles.length > 1;
+        html += `<div class="progress-section"><h3>\u041f\u0440\u043e\u043f\u0443\u0449\u0435\u043d\u043d\u044b\u0435 \u0442\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043a\u0438 (${skippedList.length})</h3>`;
+        skippedList.forEach(sk => {
+          const cycleLabel = showCycleLabel ? `<span class="skip-an-cycle">${this.escapeHtml(sk.cycleName)}</span> ` : '';
+          html += `<div class="skip-analysis-row">
+            <span class="skip-an-when">${cycleLabel}\u041d\u0435\u0434.${sk.week} ${sk.day}</span>
+            <span class="skip-an-reason">${sk.reason ? this.escapeHtml(sk.reason) : '\u2014'}</span>
+          </div>`;
+        });
+        html += '</div>';
+      }
     }
 
     // Week comparison
@@ -2401,7 +2760,40 @@ const App = {
           const approxReps = totalReps > 0 && doneAll > 0 ? Math.round(totalReps / doneAll) : 1;
           const e1rm = this.calc1RM(pr, approxReps);
           if (e1rm > pr) {
-            html += `<div class="stat-1rm-row"><span class="stat-1rm-label">Расчётный 1RM:</span><span class="stat-1rm-val">${e1rm} кг</span></div>`;
+            html += `<div class="stat-1rm-row"><span class="stat-1rm-label">\u0420\u0430\u0441\u0447\u0451\u0442\u043d\u044b\u0439 1RM:</span><span class="stat-1rm-val">${e1rm} \u043a\u0433</span></div>`;
+          }
+        }
+
+        // 5.2 - Per-exercise 1RM progression line chart
+        if (hasWeight && data.records.length >= 2) {
+          const per1RMData = data.records.map(r => {
+            let best = 0;
+            r.weights.forEach((w, i) => {
+              if (w <= 0) return;
+              const avgReps = r.reps > 0 && r.completedSets > 0 ? Math.round(r.reps / r.completedSets) : 1;
+              const e = this.calc1RM(w, avgReps);
+              if (e > best) best = e;
+            });
+            if (r.maxWeight > 0) {
+              const e = this.calc1RM(r.maxWeight, 1);
+              if (e > best) best = e;
+            }
+            return { label: '\u041d' + r.week + ' ' + r.day, value: Math.round(best * 10) / 10 };
+          }).filter(d => d.value > 0);
+
+          if (per1RMData.length >= 2) {
+            const first1rm = per1RMData[0].value;
+            const last1rm = per1RMData[per1RMData.length - 1].value;
+            const diff1rm = last1rm - first1rm;
+            const diffStr1rm = diff1rm > 0 ? '+' + diff1rm.toFixed(1) : diff1rm.toFixed(1);
+            const trendCol = diff1rm >= 0 ? 'var(--accent)' : '#ff3b30';
+            html += `<div class="ex-1rm-chart-section">
+              <div class="ex-1rm-chart-header">
+                <span>1RM \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0438\u044f</span>
+                <span style="color:${trendCol};font-family:Oswald;font-weight:600;font-size:12px">${diffStr1rm} \u043a\u0433</span>
+              </div>
+              <div class="ex-1rm-chart-wrap">${this.renderSvgLineChart(per1RMData, { height: 100 })}</div>
+            </div>`;
           }
         }
 
@@ -2626,8 +3018,9 @@ const App = {
           const done = exData.sets && exData.sets[setNum] && exData.sets[setNum].done;
           if (done) {
             completedSets++;
-            vol += w * seg.reps;
-            reps += seg.reps;
+            const actualR = exData.sets && exData.sets[setNum] && exData.sets[setNum].actualReps !== undefined ? exData.sets[setNum].actualReps : seg.reps;
+            reps += actualR;
+            vol += w * actualR;
           }
           setNum++;
         }
@@ -2642,8 +3035,9 @@ const App = {
         const done = exData.sets && exData.sets[i] && exData.sets[i].done;
         if (done) {
           completedSets++;
-          vol += w * ex.reps;
-          reps += ex.reps;
+          const actualR = exData.sets && exData.sets[i] && exData.sets[i].actualReps !== undefined ? exData.sets[i].actualReps : ex.reps;
+          reps += actualR;
+          vol += w * actualR;
         }
       }
     } else if (ex.isBodyweight) {
@@ -2652,7 +3046,8 @@ const App = {
         const done = exData.sets && exData.sets[i] && exData.sets[i].done;
         if (done) {
           completedSets++;
-          reps += ex.reps;
+          const actualR = exData.sets && exData.sets[i] && exData.sets[i].actualReps !== undefined ? exData.sets[i].actualReps : ex.reps;
+          reps += actualR;
         }
       }
     }
