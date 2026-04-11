@@ -32,8 +32,8 @@
   --done-check: #000000;
 
   /* Warn */
-  --warn: #ff9500;
-  --warn-muted: rgba(255, 149, 0, 0.12);
+  --warn: #CDFF00;
+  --warn-muted: rgba(205, 255, 0, 0.12);
 
   /* Text */
   --t1: #ffffff;
