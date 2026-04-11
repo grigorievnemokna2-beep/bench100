@@ -729,6 +729,42 @@ body {
   transform: scale(0.97);
 }
 
+/* 1RM Progression in info modal */
+.info-1rm-section {
+  background: var(--bg2);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-top: 10px;
+  border: 1px solid rgba(205, 255, 0, 0.15);
+  box-shadow: 0 0 8px rgba(205, 255, 0, 0.06);
+}
+.info-1rm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.info-1rm-chart {
+  margin-bottom: 4px;
+}
+.info-1rm-chart svg {
+  display: block;
+  width: 100%;
+}
+.info-1rm-range {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--t3);
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+}
+
 /* Legacy info styles kept for progress screen */
 .info-record {
   display: flex;
@@ -981,7 +1017,7 @@ body {
   border-top-color: rgba(205, 255, 0, 0.1);
 }
 .timer-section.timer-warning {
-  border-top-color: rgba(255, 149, 0, 0.15);
+  border-top-color: rgba(205, 255, 0, 0.25);
 }
 
 .timer-progress-bar {
@@ -995,13 +1031,13 @@ body {
   height: 100%;
   background: var(--accent);
   border-radius: var(--r-pill);
-  transition: width 0.3s ease, background 0.3s;
+  transition: width 1s linear;
   width: 0%;
   box-shadow: 0 0 6px rgba(205, 255, 0, 0.3);
 }
 .timer-section.timer-warning .timer-progress-fill {
-  background: var(--warn);
-  box-shadow: 0 0 8px rgba(255, 149, 0, 0.4);
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(205, 255, 0, 0.5);
 }
 
 .timer-row-main {
@@ -1102,7 +1138,7 @@ body {
 }
 .btn-timer-start:active { opacity: 0.7; transform: scale(0.97); }
 .btn-timer-start.running {
-  background: rgba(255, 149, 0, 0.9);
+  background: rgba(205, 255, 0, 0.7);
   color: #000;
 }
 
@@ -2111,14 +2147,14 @@ body {
   letter-spacing: 0.5px;
 }
 .timer-floating.timer-float-warn {
-  border-color: rgba(255, 149, 0, 0.25);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(255, 149, 0, 0.12);
+  border-color: rgba(205, 255, 0, 0.4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(205, 255, 0, 0.2);
 }
 .timer-floating.timer-float-warn #timer-floating-time {
-  color: var(--warn);
+  color: var(--accent);
 }
 .timer-floating.timer-float-warn .timer-floating-dot {
-  background: var(--warn);
+  background: var(--accent);
 }
 
 .content::-webkit-scrollbar { width: 0; }

@@ -1298,6 +1298,40 @@ const App = {
       html += `<button class="info-show-all" onclick="App.toggleInfoShowAll()">Скрыть</button>`;
     }
 
+    // 1RM progression chart (Epley normalized)
+    if (records.length >= 2) {
+      const rmData = records.map(r => {
+        let best1RM = 0;
+        r.sets.forEach(s => {
+          if (s.weight > 0) {
+            const e1rm = s.reps <= 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30) * 10) / 10;
+            if (e1rm > best1RM) best1RM = e1rm;
+          }
+        });
+        return { label: 'Н' + r.week + ' ' + r.day, value: best1RM };
+      }).filter(d => d.value > 0);
+
+      if (rmData.length >= 2) {
+        const first = rmData[0].value;
+        const last = rmData[rmData.length - 1].value;
+        const diff = last - first;
+        const diffStr = diff > 0 ? '+' + diff.toFixed(1) : diff.toFixed(1);
+        const trendColor = diff >= 0 ? 'var(--accent)' : '#ff3b30';
+
+        html += `<div class="info-1rm-section">`;
+        html += `<div class="info-1rm-header">
+          <span>Расчётный 1RM (Epley)</span>
+          <span style="color:${trendColor};font-family:Oswald;font-weight:600">${diffStr} кг</span>
+        </div>`;
+        html += `<div class="info-1rm-chart">${this.renderSparkline(rmData.map(d => d.value), { width: 280, height: 44 })}</div>`;
+        html += `<div class="info-1rm-range">
+          <span>${Math.min(...rmData.map(d => d.value))} кг</span>
+          <span>${Math.max(...rmData.map(d => d.value))} кг</span>
+        </div>`;
+        html += `</div>`;
+      }
+    }
+
     body.innerHTML = html;
     modal.classList.remove('hidden');
   },
@@ -1538,10 +1572,10 @@ const App = {
     const floating = document.getElementById('timer-floating');
     if (!floating) return;
     const onExercise = document.getElementById('screen-exercise').classList.contains('active');
-    if ((this.timerRunning || (this.timerSeconds > 0 && this.timerTarget > 0)) && !onExercise) {
+    if (this.timerRunning && !onExercise) {
       floating.classList.remove('hidden');
       document.getElementById('timer-floating-time').textContent = this._formatTimer(this.timerSeconds);
-      floating.classList.toggle('timer-float-warn', this.timerSeconds <= 10 && this.timerRunning);
+      floating.classList.toggle('timer-float-warn', this.timerSeconds <= 10);
     } else {
       floating.classList.add('hidden');
     }
