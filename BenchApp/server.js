@@ -21,7 +21,8 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  let filePath = req.url === '/' ? '/index.html' : req.url;
+  let urlPath = req.url.split('?')[0];
+  let filePath = urlPath === '/' ? '/index.html' : urlPath;
   filePath = path.join(DIR, filePath);
 
   const ext = path.extname(filePath);
@@ -33,7 +34,12 @@ const server = http.createServer((req, res) => {
       res.end('Not found');
       return;
     }
-    res.writeHead(200, { 'Content-Type': contentType });
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     res.end(data);
   });
 });
