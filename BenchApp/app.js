@@ -167,6 +167,7 @@ const App = {
   showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + id).classList.add('active');
+    this.updateFloatingTimer();
   },
 
   goBack() {
@@ -574,7 +575,13 @@ const App = {
   openExercise(idx) {
     this.currentExIndex = idx;
     this.showScreen('exercise');
-    this.resetTimer();
+    // Save context for floating timer return
+    this._timerContext = {
+      cycleId: this.currentCycleId,
+      week: this.currentWeek,
+      day: this.currentDay,
+      exIndex: idx
+    };
     this.renderSets();
   },
 
@@ -1391,6 +1398,7 @@ const App = {
     const display = document.getElementById('timer-display');
     display.classList.remove('running', 'warning', 'done');
     document.getElementById('timer-section').classList.remove('timer-active', 'timer-warning', 'timer-done');
+    this.updateFloatingTimer();
   },
 
   updateTimerDisplay() {
@@ -1425,8 +1433,9 @@ const App = {
       bar.style.width = pct + '%';
     }
 
-    // Media Session update
+    // Media Session + floating timer
     this.updateMediaSession();
+    this.updateFloatingTimer();
   },
 
   timerFinished() {
@@ -1528,6 +1537,32 @@ const App = {
         navigator.mediaSession.metadata = null;
       }
     } catch (e) {}
+  },
+
+  // ==================== ПЛАВАЮЩИЙ МИНИ-ТАЙМЕР ====================
+  updateFloatingTimer() {
+    const floating = document.getElementById('timer-floating');
+    if (!floating) return;
+    const onExercise = document.getElementById('screen-exercise').classList.contains('active');
+    if ((this.timerRunning || (this.timerSeconds > 0 && this.timerTarget > 0)) && !onExercise) {
+      floating.classList.remove('hidden');
+      document.getElementById('timer-floating-time').textContent = this._formatTimer(this.timerSeconds);
+      floating.classList.toggle('timer-float-warn', this.timerSeconds <= 10 && this.timerRunning);
+    } else {
+      floating.classList.add('hidden');
+    }
+  },
+
+  returnToTimer() {
+    const ctx = this._timerContext;
+    if (ctx && ctx.cycleId && ctx.week && ctx.day && ctx.exIndex !== null) {
+      this.currentCycleId = ctx.cycleId;
+      this.currentWeek = ctx.week;
+      this.currentDay = ctx.day;
+      this.currentExIndex = ctx.exIndex;
+      this.showScreen('exercise');
+      this.renderSets();
+    }
   },
 
   _formatTimer(sec) {
