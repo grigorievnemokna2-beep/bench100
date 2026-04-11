@@ -546,23 +546,17 @@ const App = {
         progressHtml = `<div class="ex-progress-bar"><div class="ex-progress-fill" style="width:${pct}%"></div></div>`;
       }
 
-      // Type icon
-      const icon = ex.isBase ? '&#9878;' : (ex.isBodyweight ? '&#9899;' : (ex.isSpecial ? '&#9733;' : '&#9675;'));
       const doneClass = completedSets >= totalSets && totalSets > 0 ? 'ex-done' : '';
+      const typeCls = ex.isIndividual ? 'individual-exercise' : (ex.isBodyweight ? 'bodyweight-exercise' : '');
 
       return `
-        <div class="exercise-card ${baseCls} ${doneClass}" onclick="App.openExercise(${idx})">
+        <div class="exercise-card ${baseCls} ${typeCls} ${doneClass}" onclick="App.openExercise(${idx})">
           <button class="ex-info-btn" onclick="event.stopPropagation(); App.showExerciseInfo(${idx})" title="Инфо">i</button>
-          <div class="exercise-card-row">
-            <div class="ex-type-icon">${icon}</div>
-            <div class="exercise-card-body">
-              <div class="ex-name">${customName}</div>
-              <div class="ex-details">${detailsHtml}</div>
-              ${supersetHtml}
-              ${noteHtml}
-              ${checkHtml}
-            </div>
-          </div>
+          <div class="ex-name">${customName}</div>
+          <div class="ex-details">${detailsHtml}</div>
+          ${supersetHtml}
+          ${noteHtml}
+          ${checkHtml}
           ${progressHtml}
         </div>
       `;
