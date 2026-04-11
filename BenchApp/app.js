@@ -1449,7 +1449,7 @@ const App = {
     // Уведомление на экране блокировки
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
-        new Notification('Bench 100', {
+        new Notification('GRIND', {
           body: 'Время отдыха вышло! Следующий подход.',
           icon: 'icon-192.png',
           tag: 'bench100-timer',
@@ -1503,7 +1503,7 @@ const App = {
         const t = this._formatTimer(this.timerSeconds);
         navigator.mediaSession.metadata = new MediaMetadata({
           title: 'Отдых — ' + t,
-          artist: 'Bench 100',
+          artist: 'GRIND',
           album: 'Следующий подход',
           artwork: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }]
         });

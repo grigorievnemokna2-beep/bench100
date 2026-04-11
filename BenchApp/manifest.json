@@ -1,6 +1,6 @@
 {
-  "name": "Bench 100 - Жим лежа",
-  "short_name": "Bench100",
+  "name": "GRIND - Жим лежа",
+  "short_name": "GRIND",
   "description": "Программа тренировок по жиму лежа. Клуб 100 кг.",
   "start_url": "./index.html",
   "display": "standalone",
