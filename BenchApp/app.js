@@ -133,6 +133,7 @@ const App = {
         }
         if (!confirm(`Восстановить данные? (${imported.cycles.length} проходок)\nТекущие данные будут заменены.`)) return;
         this.data = imported;
+        this.migrateData();
         this.saveData();
         this.showCycles();
         this.showToast('Данные восстановлены!');
@@ -216,7 +217,7 @@ const App = {
       html += `
         <button class="btn-continue" onclick="App.openCycle('${lastCycle.id}'); App.openDay(${next.week}, '${next.day}')">
           <div>
-            <div>&#9654; Продолжить: Неделя ${next.week}, ${next.day}</div>
+            <div><span class="play-icon"></span> Продолжить: Неделя ${next.week}, ${next.day}</div>
             ${next.weekTitle ? `<div class="continue-sub">${next.weekTitle}</div>` : ''}
           </div>
         </button>
@@ -832,7 +833,7 @@ const App = {
         <div class="set-row">
           <div class="set-number">${i + 1}</div>
           <div class="set-info">
-            <div class="set-weight" style="color: var(--text-dim)">Без веса</div>
+            <div class="set-weight" style="color: var(--t3)">Без веса</div>
             ${this.repsHtml(i, ex.reps, actualReps, isSuperset)}
           </div>
           <button class="set-check ${doneClass}" onclick="App.toggleSet(${i}, ${isSuperset})">
@@ -870,7 +871,7 @@ const App = {
       html += `
         <div class="set-row">
           <div class="set-info">
-            <div class="set-weight" style="color: var(--yellow)">${this.escapeHtml(ex.note || ex.name)}</div>
+            <div class="set-weight" style="color: var(--warn)">${this.escapeHtml(ex.note || ex.name)}</div>
           </div>
           <button class="set-check ${done ? 'done' : ''}" onclick="App.toggleSet(0)">
             ${done ? '&#10003;' : ''}
@@ -911,11 +912,13 @@ const App = {
 
     if (!exData.sets) exData.sets = {};
 
-    // Переключаем
+    // Переключаем (сохраняем actualReps при повторной отметке)
     if (exData.sets[setIdx] && exData.sets[setIdx].done) {
       exData.sets[setIdx].done = false;
     } else {
-      exData.sets[setIdx] = { done: true, timestamp: new Date().toISOString() };
+      if (!exData.sets[setIdx]) exData.sets[setIdx] = {};
+      exData.sets[setIdx].done = true;
+      exData.sets[setIdx].timestamp = new Date().toISOString();
     }
 
     // Считаем выполненные
@@ -970,6 +973,9 @@ const App = {
     if (reps >= ex.totalReps) {
       workout.exercises[exKey].sets = { 0: { done: true } };
       workout.exercises[exKey].completedSets = 1;
+    } else {
+      workout.exercises[exKey].sets = { 0: { done: false } };
+      workout.exercises[exKey].completedSets = 0;
     }
 
     this.checkWorkoutCompletion(workout);
@@ -986,6 +992,12 @@ const App = {
       const totalSets = this.getTotalSets(ex);
       const completedSets = saved ? (saved.completedSets || 0) : 0;
       if (completedSets < totalSets) allDone = false;
+      // Проверяем суперсет
+      if (ex.superset) {
+        const ssTotalSets = ex.superset.sets || 0;
+        const ssCompleted = saved && saved.superset ? (saved.superset.completedSets || 0) : 0;
+        if (ssCompleted < ssTotalSets) allDone = false;
+      }
     });
 
     workout.completed = allDone;
@@ -993,10 +1005,14 @@ const App = {
 
   getTotalSets(ex) {
     if (ex.isSpecial) return ex.totalReps > 0 ? 1 : 1;
+    let total = 0;
     if (ex.segments && !ex.isIndividual) {
-      return ex.segments.reduce((sum, seg) => sum + seg.sets, 0);
+      total = ex.segments.reduce((sum, seg) => sum + seg.sets, 0);
+    } else {
+      total = ex.sets || 0;
     }
-    return ex.sets || 0;
+    if (ex.superset) total += ex.superset.sets || 0;
+    return total;
   },
 
   // ==================== ВВОД ВЕСА ====================
@@ -1199,7 +1215,7 @@ const App = {
         week.days.forEach(day => {
           const key = `${week.week}-${day.day}`;
           const workout = c.workouts[key];
-          if (!workout || !workout.exercises) return;
+          if (!workout || !workout.exercises || workout.skipped) return;
 
           day.exercises.forEach((pEx, pIdx) => {
             if (pEx.name !== exName) return;
@@ -1353,7 +1369,7 @@ const App = {
         let best1RM = 0;
         r.sets.forEach(s => {
           if (s.weight > 0) {
-            const e1rm = s.reps <= 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30) * 10) / 10;
+            const e1rm = this.calc1RM(s.weight, s.reps);
             if (e1rm > best1RM) best1RM = e1rm;
           }
         });
@@ -1738,7 +1754,7 @@ const App = {
         week.days.forEach(day => {
           const key = `${week.week}-${day.day}`;
           const wo = cycle.workouts[key];
-          if (!wo || !wo.exercises) return;
+          if (!wo || !wo.exercises || wo.skipped) return;
           day.exercises.forEach((ex, idx) => {
             if (ex.isSpecial) return;
             const nm = ex.name.toLowerCase();
@@ -1753,7 +1769,8 @@ const App = {
                   const w = ov !== null ? ov : this.roundWeight(cycle.maxWeight * seg.percent / 100);
                   const done = ed.sets && ed.sets[sn] && ed.sets[sn].done;
                   if (done) {
-                    const e1rm = this.calc1RM(w, seg.reps);
+                    const actualR = ed.sets[sn].actualReps !== undefined ? ed.sets[sn].actualReps : seg.reps;
+                    const e1rm = this.calc1RM(w, actualR);
                     if (e1rm > best1RM) best1RM = e1rm;
                   }
                   sn++;
@@ -1992,7 +2009,7 @@ const App = {
         week.days.forEach(day => {
           const wKey = `${week.week}-${day.day}`;
           const wo = currentCycle.workouts[wKey];
-          if (!wo || !wo.exercises) return;
+          if (!wo || !wo.exercises || wo.skipped) return;
           day.exercises.forEach((ex, idx) => {
             if (ex.isSpecial) return;
             const ed = wo.exercises[idx];
@@ -2145,10 +2162,16 @@ const App = {
       if (data.isBodyweight) continue;
       let best1RM = 0, bestWeight = 0, bestReps = 0;
       data.records.forEach(r => {
+        // Per-set 1RM: check each weight×reps pair individually
+        r.weights.forEach((w, i) => {
+          if (w <= 0) return;
+          const reps = r.reps > 0 && r.completedSets > 0 ? Math.round(r.reps / r.completedSets) : 1;
+          const e1rm = this.calc1RM(w, reps);
+          if (e1rm > best1RM) { best1RM = e1rm; bestWeight = w; bestReps = reps; }
+        });
         if (r.maxWeight > 0 && r.completedSets > 0) {
-          const approxReps = r.reps > 0 ? Math.round(r.reps / r.completedSets) : 1;
-          const e1rm = this.calc1RM(r.maxWeight, approxReps);
-          if (e1rm > best1RM) { best1RM = e1rm; bestWeight = r.maxWeight; bestReps = approxReps; }
+          const e1rm = this.calc1RM(r.maxWeight, 1);
+          if (e1rm > best1RM) { best1RM = e1rm; bestWeight = r.maxWeight; bestReps = 1; }
         }
       });
       if (best1RM > 0) rm1Board.push({ name, best1RM, bestWeight, bestReps, isBase: data.isBase });
@@ -2253,7 +2276,7 @@ const App = {
         week.days.forEach(day => {
           const key = `${week.week}-${day.day}`;
           const workout = cycle.workouts[key];
-          if (!workout || !workout.exercises) return;
+          if (!workout || !workout.exercises || workout.skipped) return;
 
           day.exercises.forEach((ex, idx) => {
             if (ex.isSpecial) return;
