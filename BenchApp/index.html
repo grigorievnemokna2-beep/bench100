@@ -132,6 +132,14 @@
     <div class="modal-content">
       <h3 id="modal-weight-title">Введи вес (кг)</h3>
       <input type="number" id="modal-weight-input" class="form-input big-input" step="0.5" inputmode="decimal">
+      <div class="weight-presets">
+        <button class="weight-preset-btn" onclick="App.adjustModalWeight(-10)">-10</button>
+        <button class="weight-preset-btn" onclick="App.adjustModalWeight(-5)">-5</button>
+        <button class="weight-preset-btn" onclick="App.adjustModalWeight(-2.5)">-2.5</button>
+        <button class="weight-preset-btn plus" onclick="App.adjustModalWeight(2.5)">+2.5</button>
+        <button class="weight-preset-btn plus" onclick="App.adjustModalWeight(5)">+5</button>
+        <button class="weight-preset-btn plus" onclick="App.adjustModalWeight(10)">+10</button>
+      </div>
       <div class="modal-buttons">
         <button class="btn-secondary" onclick="App.closeModal()">Отмена</button>
         <button class="btn-primary" onclick="App.saveWeight()">Сохранить</button>

@@ -198,7 +198,23 @@ const App = {
       return;
     }
 
-    container.innerHTML = this.data.cycles.map(cycle => {
+    let html = '';
+
+    // Continue button for most recent cycle
+    const lastCycle = this.data.cycles[this.data.cycles.length - 1];
+    const next = this.getNextWorkout(lastCycle);
+    if (next) {
+      html += `
+        <button class="btn-continue" onclick="App.openCycle('${lastCycle.id}'); App.openDay(${next.week}, '${next.day}')">
+          <div>
+            <div>&#9654; Продолжить: Неделя ${next.week}, ${next.day}</div>
+            ${next.weekTitle ? `<div class="continue-sub">${next.weekTitle}</div>` : ''}
+          </div>
+        </button>
+      `;
+    }
+
+    html += this.data.cycles.map(cycle => {
       const totalWorkouts = this.getTotalWorkouts();
       const completedWorkouts = this.getCompletedWorkouts(cycle);
       const progressPercent = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
@@ -211,6 +227,8 @@ const App = {
             <span class="cycle-max">Макс: ${cycle.maxWeight} кг</span>
             &nbsp;&middot;&nbsp;
             <span>${completedWorkouts}/${totalWorkouts} тренировок</span>
+            &nbsp;&middot;&nbsp;
+            <span>${progressPercent}%</span>
           </div>
           <div class="cycle-progress-bar">
             <div class="cycle-progress-fill" style="width: ${progressPercent}%"></div>
@@ -218,6 +236,8 @@ const App = {
         </div>
       `;
     }).join('');
+
+    container.innerHTML = html;
   },
 
   getTotalWorkouts() {
@@ -229,6 +249,22 @@ const App = {
   getCompletedWorkouts(cycle) {
     if (!cycle.workouts) return 0;
     return Object.values(cycle.workouts).filter(w => w.completed).length;
+  },
+
+  getNextWorkout(cycle) {
+    if (!cycle || !cycle.workouts) {
+      return { week: 1, day: PROGRAM[0].days[0].day };
+    }
+    for (const week of PROGRAM) {
+      for (const day of week.days) {
+        const key = `${week.week}-${day.day}`;
+        const wo = cycle.workouts[key];
+        if (!wo || !wo.completed) {
+          return { week: week.week, day: day.day, weekTitle: week.title };
+        }
+      }
+    }
+    return null;
   },
 
   // ==================== СОЗДАНИЕ ПРОХОДКИ ====================
@@ -449,6 +485,13 @@ const App = {
         checkHtml = `<div class="ex-check">${completedSets >= totalSets ? '&#10003; Выполнено' : `${completedSets}/${totalSets} подходов`}</div>`;
       }
 
+      // Mini progress bar
+      let progressHtml = '';
+      if (totalSets > 0) {
+        const pct = Math.round((completedSets / totalSets) * 100);
+        progressHtml = `<div class="ex-progress-bar"><div class="ex-progress-fill" style="width:${pct}%"></div></div>`;
+      }
+
       return `
         <div class="exercise-card ${baseCls}" onclick="App.openExercise(${idx})">
           <button class="ex-info-btn" onclick="event.stopPropagation(); App.showExerciseInfo(${idx})" title="Инфо">i</button>
@@ -457,6 +500,7 @@ const App = {
           ${supersetHtml}
           ${noteHtml}
           ${checkHtml}
+          ${progressHtml}
         </div>
       `;
     }).join('');
@@ -794,6 +838,18 @@ const App = {
 
     this.saveData();
     this.renderSets();
+
+    // Auto-start rest timer when marking set as done
+    if (exData.sets[setIdx] && exData.sets[setIdx].done && !isSuperset) {
+      if (!this.timerRunning) {
+        const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+        const dayData = weekData.days.find(d => d.day === this.currentDay);
+        const ex = dayData.exercises[this.currentExIndex];
+        const restTime = ex.isBase ? 180 : 90;
+        this.setTimer(restTime);
+        this.toggleTimer();
+      }
+    }
   },
 
   saveSpecialReps(reps) {
@@ -936,6 +992,13 @@ const App = {
   // Старый метод для совместимости
   showWeightInput(isSuperset = false) {
     this.showSetWeightInput(0, isSuperset);
+  },
+
+  adjustModalWeight(delta) {
+    const input = document.getElementById('modal-weight-input');
+    const current = parseFloat(input.value) || 0;
+    const newVal = Math.max(0, Math.round((current + delta) * 10) / 10);
+    input.value = newVal;
   },
 
   saveWeight() {
