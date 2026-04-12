@@ -22,6 +22,9 @@ const App = {
   // Модальное окно
   modalCallback: null,
 
+  // Audio
+  _audioCtx: null,
+
   // Графики
   _chartId: 0,
 
@@ -112,7 +115,7 @@ const App = {
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    const date = new Date().toISOString().slice(0, 10);
+    const date = new Date().toLocaleDateString('sv-SE');
     a.href = url;
     a.download = `bench100_backup_${date}.json`;
     a.click();
@@ -142,6 +145,7 @@ const App = {
           return;
         }
         if (!confirm(`Восстановить данные? (${imported.cycles.length} проходок)\nТекущие данные будут заменены.`)) return;
+        this.resetTimer();
         this.data = imported;
         if (this.data.barWeight === undefined) this.data.barWeight = 20;
         if (!this.data.trainingDays) this.data.trainingDays = ['Пн', 'Ср', 'Пт'];
@@ -243,6 +247,8 @@ const App = {
           </div>
         </button>
       `;
+    } else if (lastCycle && this.getCompletedWorkouts(lastCycle) >= this.getTotalWorkouts()) {
+      html += '<div class="workout-finished-badge">Программа завершена!</div>';
     }
 
     html += this.data.cycles.map(cycle => {
@@ -511,6 +517,7 @@ const App = {
 
   // ==================== ИЗМЕНЕНИЕ МАКСИМУМА ====================
   editMax() {
+    this.closeModal();
     const cycle = this.getCycle();
     document.getElementById('modal-max-input').value = cycle.maxWeight;
     document.getElementById('modal-max').classList.remove('hidden');
@@ -518,14 +525,14 @@ const App = {
 
   saveNewMax() {
     const newMax = parseFloat(document.getElementById('modal-max-input').value);
-    if (!newMax || newMax <= 0) return;
+    if (!newMax || newMax <= 0) { this.showToast('Введи корректный вес'); return; }
 
     const cycle = this.getCycle();
     cycle.maxWeight = newMax;
     this.saveData();
 
     document.getElementById('max-badge').textContent = `Макс: ${newMax} кг`;
-    document.getElementById('modal-max').classList.add('hidden');
+    this.closeModal();
   },
 
   // ==================== ЭКРАН: ДЕНЬ ТРЕНИРОВКИ ====================
@@ -703,6 +710,7 @@ const App = {
         totalSets += ex.superset.sets || 0;
         if (saved && saved.superset) completedSets += saved.superset.completedSets || 0;
       }
+      completedSets = Math.min(completedSets, totalSets);
       if (completedSets > 0) {
         checkHtml = `<div class="ex-check">${completedSets >= totalSets ? '&#10003; Выполнено' : `${completedSets}/${totalSets} подходов`}</div>`;
       }
@@ -839,6 +847,7 @@ const App = {
   },
 
   editReps(setIdx, targetReps, isSuperset = false) {
+    this.closeModal();
     const cycle = this.getCycle();
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
     const workout = cycle.workouts ? cycle.workouts[workoutKey] : null;
@@ -862,7 +871,7 @@ const App = {
 
   saveReps() {
     const val = parseInt(document.getElementById('modal-reps-input').value);
-    if (isNaN(val) || val < 0) return;
+    if (isNaN(val) || val < 0) { this.showToast('Введи число'); return; }
 
     const setIdx = this._repsSetIdx;
     const isSuperset = this._repsIsSuperset;
@@ -907,6 +916,7 @@ const App = {
 
     ex.segments.forEach((seg, segIdx) => {
       const calcWeight = this.roundWeight(maxWeight * seg.percent / 100);
+      const displayWeight = isNaN(calcWeight) ? 0 : calcWeight;
       for (let i = 0; i < seg.sets; i++) {
         setNum++;
         const done = saved && saved.sets && saved.sets[setNum - 1] && saved.sets[setNum - 1].done;
@@ -915,7 +925,7 @@ const App = {
         // Проверяем переопределение веса
         const overrideWeight = saved && saved.setWeights && saved.setWeights[setNum - 1] !== undefined
           ? saved.setWeights[setNum - 1] : null;
-        const weight = overrideWeight !== null ? overrideWeight : calcWeight;
+        const weight = overrideWeight !== null ? overrideWeight : displayWeight;
         const isOverridden = overrideWeight !== null;
 
         const perSide = this.getPerSide(weight);
@@ -926,7 +936,7 @@ const App = {
           <div class="set-row ${done ? 'set-done' : ''}">
             <div class="set-number">${setNum}</div>
             <div class="set-info">
-              <div class="set-weight editable" onclick="App.showSetWeightInput(${setNum - 1}, false, ${calcWeight})">
+              <div class="set-weight editable" onclick="App.showSetWeightInput(${setNum - 1}, false, ${displayWeight})">
                 ${weight} кг <small>(${seg.percent}%)</small>
                 ${isOverridden ? '<small class="override-mark">изм.</small>' : ''}
               </div>
@@ -1175,6 +1185,7 @@ const App = {
   // ==================== ВВОД ВЕСА ====================
   // Ввод веса для конкретного подхода
   showSetWeightInput(setIdx, isSuperset = false, defaultWeight = null) {
+    this.closeModal();
     const cycle = this.getCycle();
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
     const workout = cycle.workouts ? cycle.workouts[workoutKey] : null;
@@ -1290,16 +1301,16 @@ const App = {
 
   saveWeight() {
     const weight = parseFloat(document.getElementById('modal-weight-input').value);
-    if (!weight || weight <= 0) {
+    if (isNaN(weight) || !isFinite(weight) || weight < 0) {
       this.showToast('Введи корректный вес!');
       return;
     }
 
-    if (this.modalCallback) {
-      this.modalCallback(weight);
+    try {
+      if (this.modalCallback) this.modalCallback(weight);
+    } finally {
+      this.closeModal();
     }
-
-    this.closeModal();
   },
 
   closeModal() {
@@ -1316,6 +1327,7 @@ const App = {
   },
 
   editExerciseName() {
+    this.closeModal();
     const weekData = PROGRAM.find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const ex = dayData.exercises[this.currentExIndex];
@@ -1730,6 +1742,9 @@ const App = {
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
     if (cycle.workouts && cycle.workouts[workoutKey]) {
       cycle.workouts[workoutKey].finishedAt = new Date().toISOString();
+    } else {
+      this.showToast('Сначала начни тренировку');
+      return;
     }
     // Stop timer, wake lock, media session
     this.resetTimer();
@@ -1957,6 +1972,7 @@ const App = {
       btn.classList.remove('running');
     } else {
       // Старт
+      clearInterval(this.timerInterval);
       if (this.timerSeconds <= 0 && this.timerTarget > 0) {
         this.timerSeconds = this.timerTarget;
       }
@@ -2012,6 +2028,7 @@ const App = {
   updateTimerDisplay() {
     const display = document.getElementById('timer-display');
     const section = document.getElementById('timer-section');
+    if (!display || !section) return;
     const ring = document.getElementById('timer-ring-progress');
     const minutes = Math.floor(this.timerSeconds / 60);
     const secs = this.timerSeconds % 60;
@@ -2080,7 +2097,9 @@ const App = {
 
     // Звуковой сигнал через Web Audio API
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!this._audioCtx) this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = this._audioCtx;
+      if (ctx.state === 'suspended') ctx.resume();
       const playBeep = (freq, startTime, duration) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -2148,6 +2167,10 @@ const App = {
       if (this._silentAudio) {
         this._silentAudio.pause();
         this._silentAudio.currentTime = 0;
+        if (this._silentAudio.src) {
+          URL.revokeObjectURL(this._silentAudio.src);
+        }
+        this._silentAudio = null;
       }
       if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = null;
@@ -2208,6 +2231,7 @@ const App = {
     this.timerSeconds = Math.max(0, this.timerSeconds + seconds);
     if (this.timerRunning) {
       this.timerEndAt = Date.now() + this.timerSeconds * 1000;
+      this.timerTarget = this.timerSeconds;
     } else {
       this.timerTarget = this.timerSeconds;
     }
@@ -2215,6 +2239,7 @@ const App = {
   },
 
   editTimerManual() {
+    this.closeModal();
     document.getElementById('modal-timer-input').value = this.timerSeconds || '';
     document.getElementById('modal-timer').classList.remove('hidden');
     setTimeout(() => document.getElementById('modal-timer-input').focus(), 100);
@@ -2444,7 +2469,7 @@ const App = {
 
     // 1RM hero with sparkline (5.5)
     const est1RM = this.getEstimated1RM(cycles);
-    const maxW = isSingle ? currentCycle.maxWeight : Math.max(...cycles.map(c => c.maxWeight));
+    const maxW = isSingle ? currentCycle.maxWeight : (cycles.length > 0 ? Math.max(...cycles.map(c => c.maxWeight)) : 0);
 
     // Collect weekly best 1RM values for sparkline
     const weekly1RMVals = [];
@@ -2785,7 +2810,7 @@ const App = {
           const key = `${week.week}-${day.day}`;
           if (currentCycle.workouts[key] && currentCycle.workouts[key].completed) weekCompleted++;
         });
-        const percent = Math.round((weekCompleted / weekWorkouts) * 100);
+        const percent = weekWorkouts > 0 ? Math.round((weekCompleted / weekWorkouts) * 100) : 0;
         html += `<div class="progress-bar-container">
           <div class="progress-bar-label"><span>Неделя ${week.week}</span><span>${weekCompleted}/${weekWorkouts}</span></div>
           <div class="progress-bar"><div class="progress-bar-fill" style="width:${percent}%"></div></div>
@@ -2868,13 +2893,6 @@ const App = {
       if (data.isBodyweight) continue;
       let best1RM = 0, bestWeight = 0, bestReps = 0;
       data.records.forEach(r => {
-        // Per-set 1RM: check each weight×reps pair individually
-        r.weights.forEach((w, i) => {
-          if (w <= 0) return;
-          const reps = r.reps > 0 && r.completedSets > 0 ? Math.round(r.reps / r.completedSets) : 1;
-          const e1rm = this.calc1RM(w, reps);
-          if (e1rm > best1RM) { best1RM = e1rm; bestWeight = w; bestReps = reps; }
-        });
         if (r.maxWeight > 0 && r.completedSets > 0) {
           const e1rm = this.calc1RM(r.maxWeight, 1);
           if (e1rm > best1RM) { best1RM = e1rm; bestWeight = r.maxWeight; bestReps = 1; }
@@ -2890,7 +2908,7 @@ const App = {
         const badge = item.isBase ? '<span class="stat-type-badge base" style="margin-left:6px;vertical-align:middle">Б</span>' : '';
         html += `<div class="pr-row">
           <span class="pr-rank">${i + 1}</span>
-          <span class="pr-name">${item.name}${badge}</span>
+          <span class="pr-name">${this.escapeHtml(item.name)}${badge}</span>
           <span class="pr-val">${item.best1RM} кг</span>
         </div>`;
       });
@@ -2913,7 +2931,7 @@ const App = {
         const badge = item.isBase ? '<span class="stat-type-badge base" style="margin-left:6px;vertical-align:middle">Б</span>' : '';
         html += `<div class="pr-row">
           <span class="pr-rank">${i + 1}</span>
-          <span class="pr-name">${item.name}${badge}</span>
+          <span class="pr-name">${this.escapeHtml(item.name)}${badge}</span>
           <span class="pr-val accent">${item.pr} кг</span>
         </div>`;
       });
@@ -2937,7 +2955,7 @@ const App = {
       volBoard.slice(0, 10).forEach((item, i) => {
         html += `<div class="pr-row">
           <span class="pr-rank">${i + 1}</span>
-          <span class="pr-name">${item.name}</span>
+          <span class="pr-name">${this.escapeHtml(item.name)}</span>
           <span class="pr-val">${item.vol > 999 ? (item.vol / 1000).toFixed(1) + 'т' : item.vol} кг</span>
         </div>`;
       });
@@ -2958,7 +2976,7 @@ const App = {
       bwBoard.forEach((item, i) => {
         html += `<div class="pr-row">
           <span class="pr-rank">${i + 1}</span>
-          <span class="pr-name">${item.name}</span>
+          <span class="pr-name">${this.escapeHtml(item.name)}</span>
           <span class="pr-val">${item.totalReps} повт.</span>
         </div>`;
       });
@@ -3072,10 +3090,10 @@ const App = {
       let prBadge = '';
       if (hasWeight && pr > 0) prBadge = `<span class="pr-badge">PR ${pr} кг</span>`;
 
-      const safeName = name.replace(/'/g, "\\'");
+      const safeName = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       html += `<div class="exercise-stat-card ${isExpanded ? 'expanded' : 'collapsed'}">`;
       html += `<div class="stat-card-header" onclick="App.toggleExExpand('${safeName}')">
-        <div class="stat-card-name">${name} ${trendHtml}</div>
+        <div class="stat-card-name">${this.escapeHtml(name)} ${trendHtml}</div>
         <div class="stat-card-badges">${typeBadge}${prBadge}</div>
         <span class="expand-arrow">${isExpanded ? '&#9650;' : '&#9660;'}</span>
       </div>`;
@@ -3104,8 +3122,7 @@ const App = {
 
         // 1RM estimate
         if (hasWeight && pr > 0) {
-          const approxReps = totalReps > 0 && doneAll > 0 ? Math.round(totalReps / doneAll) : 1;
-          const e1rm = this.calc1RM(pr, approxReps);
+          const e1rm = this.calc1RM(pr, 1);
           if (e1rm > pr) {
             html += `<div class="stat-1rm-row"><span class="stat-1rm-label">\u0420\u0430\u0441\u0447\u0451\u0442\u043d\u044b\u0439 1RM:</span><span class="stat-1rm-val">${e1rm} \u043a\u0433</span></div>`;
           }
@@ -3360,10 +3377,10 @@ const App = {
           const ov = exData.setWeights && exData.setWeights[setNum] !== undefined
             ? exData.setWeights[setNum] : null;
           const w = ov !== null ? ov : calcW;
-          weights.push(w);
-          if (w > maxWeight) maxWeight = w;
           const done = exData.sets && exData.sets[setNum] && exData.sets[setNum].done;
           if (done) {
+            weights.push(w);
+            if (w > maxWeight) maxWeight = w;
             completedSets++;
             const actualR = exData.sets && exData.sets[setNum] && exData.sets[setNum].actualReps !== undefined ? exData.sets[setNum].actualReps : seg.reps;
             reps += actualR;
@@ -3377,10 +3394,10 @@ const App = {
       for (let i = 0; i < ex.sets; i++) {
         const w = exData.setWeights && exData.setWeights[i] !== undefined
           ? exData.setWeights[i] : (exData.weight || 0);
-        weights.push(w);
-        if (w > maxWeight) maxWeight = w;
         const done = exData.sets && exData.sets[i] && exData.sets[i].done;
         if (done) {
+          weights.push(w);
+          if (w > maxWeight) maxWeight = w;
           completedSets++;
           const actualR = exData.sets && exData.sets[i] && exData.sets[i].actualReps !== undefined ? exData.sets[i].actualReps : ex.reps;
           reps += actualR;
