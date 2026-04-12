@@ -2322,6 +2322,68 @@ body {
   text-shadow: 0 0 8px rgba(205, 255, 0, 0.3);
 }
 
+/* ============ INLINE WEIGHT ±BUTTONS ============ */
+.set-weight-inline { display: flex; align-items: center; gap: 6px; }
+.weight-adj {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid rgba(205, 255, 0, 0.2); background: transparent;
+  color: var(--accent); font-size: 16px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s; flex-shrink: 0;
+}
+.weight-adj:active { background: var(--accent); color: #000; }
+
+/* ============ NEXT EXERCISE BUTTON ============ */
+.btn-next-exercise {
+  display: block; width: 100%; padding: 14px; margin-top: 10px;
+  background: var(--accent); color: #000; border: none;
+  border-radius: var(--r-pill); font-size: 15px; font-weight: 700;
+  cursor: pointer; text-align: center;
+  box-shadow: 0 0 16px rgba(205, 255, 0, 0.25);
+}
+.btn-next-exercise:active { transform: scale(0.97); opacity: 0.8; }
+
+/* ============ COLLAPSED WEEKS ============ */
+.week-collapsed {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; opacity: 0.5; cursor: pointer;
+}
+.week-collapsed .week-days, .week-collapsed .week-meta { display: none; }
+.week-done-badge {
+  margin-left: auto; background: var(--accent); color: #000;
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: var(--r-pill);
+}
+
+/* ============ TODAY HIGHLIGHT ============ */
+.day-chip.today {
+  border-color: rgba(205, 255, 0, 0.5) !important;
+  box-shadow: 0 0 12px rgba(205, 255, 0, 0.2);
+  animation: todayPulse 2s infinite alternate;
+}
+@keyframes todayPulse {
+  from { box-shadow: 0 0 8px rgba(205, 255, 0, 0.15); }
+  to { box-shadow: 0 0 16px rgba(205, 255, 0, 0.3); }
+}
+
+/* ============ SWIPE CYCLE CARDS ============ */
+.cycle-card-wrapper {
+  position: relative; overflow: hidden;
+  border-radius: var(--r-lg); margin-bottom: 10px;
+}
+.swipe-actions {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  display: flex; align-items: center; padding-right: 12px;
+}
+.swipe-action-delete {
+  background: #ff3b30; color: #fff; border: none;
+  padding: 10px 16px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.cycle-card-wrapper .cycle-card {
+  position: relative; z-index: 1;
+  transition: transform 0.2s ease; margin-bottom: 0;
+}
+
 .content::-webkit-scrollbar { width: 0; }
 ::selection { background: var(--accent); color: #000; }
 
@@ -2482,4 +2544,90 @@ body {
 /* Hide 1RM chart in collapsed cards */
 .exercise-stat-card.collapsed .ex-1rm-chart-section {
   display: none;
+}
+
+/* ============ AUTO-ADVANCE HIGHLIGHT ============ */
+.set-row.highlight-next {
+  animation: highlightPulse 1s ease;
+}
+@keyframes highlightPulse {
+  0%, 100% { background: var(--surface); }
+  50% { background: rgba(205, 255, 0, 0.08); }
+}
+
+/* ============ INLINE WEIGHT ADJUSTMENT ============ */
+.set-weight-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.weight-adj {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(205, 255, 0, 0.2);
+  background: transparent;
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.weight-adj:active {
+  background: var(--accent);
+  color: #000;
+}
+
+/* ============ START WORKOUT / NEXT EXERCISE ============ */
+.btn-start-workout {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: 'Oswald', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-start-workout:active {
+  opacity: 0.7;
+}
+.btn-next-exercise {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-next-exercise:active {
+  opacity: 0.7;
+}
+.workout-complete-msg {
+  text-align: center;
+  padding: 16px;
+  margin-top: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
 }

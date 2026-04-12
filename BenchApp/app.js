@@ -26,10 +26,14 @@ const App = {
   _chartId: 0,
 
   // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+  // Expanded weeks tracking for collapse feature
+  _expandedWeeks: {},
+
   init() {
     this.loadData();
     this.showCycles();
     this.initModalKeys();
+    this.initSwipeGestures();
 
     // Запрашиваем разрешение на уведомления (для таймера на экране блокировки)
     if ('Notification' in window && Notification.permission === 'default') {
@@ -72,6 +76,8 @@ const App = {
       this.data = { cycles: [], barWeight: 20, version: 1 };
     }
     if (this.data.barWeight === undefined) this.data.barWeight = 20;
+    if (!this.data.trainingDays) this.data.trainingDays = ['Пн', 'Ср', 'Пт'];
+    if (!this.data.weightStep) this.data.weightStep = 0.5;
     this.migrateData();
   },
 
@@ -249,20 +255,24 @@ const App = {
       }
 
       return `
-        <div class="cycle-card" onclick="App.openCycle('${cycle.id}')">
-          <button class="cycle-delete" onclick="event.stopPropagation(); App.deleteCycle('${cycle.id}')" title="Удалить">&#x2715;</button>
-          <h3>${this.escapeHtml(cycle.name)}</h3>
-          <div class="cycle-meta">
-            <span class="cycle-max">Макс: ${cycle.maxWeight} кг</span>
-            &nbsp;&middot;&nbsp;
-            <span>${completedWorkouts}/${totalWorkouts} тренировок</span>
-            &nbsp;&middot;&nbsp;
-            <span>${progressPercent}%</span>
-            &nbsp;&middot;&nbsp;
-            <span>Неделя ${currentWeek} из 9</span>
+        <div class="cycle-card-wrapper">
+          <div class="swipe-actions">
+            <button class="swipe-action-delete" onclick="event.stopPropagation(); App.deleteCycle('${cycle.id}')">Удалить</button>
           </div>
-          <div class="cycle-progress-bar">
-            <div class="cycle-progress-fill" style="width: ${progressPercent}%"></div>
+          <div class="cycle-card" data-cycle-id="${cycle.id}" onclick="App.openCycle('${cycle.id}')">
+            <h3>${this.escapeHtml(cycle.name)}</h3>
+            <div class="cycle-meta">
+              <span class="cycle-max">Макс: ${cycle.maxWeight} кг</span>
+              &nbsp;&middot;&nbsp;
+              <span>${completedWorkouts}/${totalWorkouts} тренировок</span>
+              &nbsp;&middot;&nbsp;
+              <span>${progressPercent}%</span>
+              &nbsp;&middot;&nbsp;
+              <span>Неделя ${currentWeek} из 9</span>
+            </div>
+            <div class="cycle-progress-bar">
+              <div class="cycle-progress-fill" style="width: ${progressPercent}%"></div>
+            </div>
           </div>
         </div>
       `;
@@ -328,7 +338,16 @@ const App = {
   showAddCycle() {
     this.showScreen('add-cycle');
     document.getElementById('cycle-name').value = `Проходка ${this.data.cycles.length + 1}`;
-    document.getElementById('cycle-max').value = '';
+    // Auto-suggest max from last cycle
+    const hint = document.getElementById('cycle-max-hint');
+    if (this.data.cycles.length > 0) {
+      const lastMax = this.data.cycles[this.data.cycles.length - 1].maxWeight;
+      document.getElementById('cycle-max').value = lastMax + 2.5;
+      hint.textContent = `Прошлая проходка: ${lastMax} кг (+2.5 кг)`;
+    } else {
+      document.getElementById('cycle-max').value = '';
+      hint.textContent = 'Все веса в базовых упражнениях будут рассчитаны автоматически от этой цифры.';
+    }
     document.getElementById('cycle-max').focus();
   },
 
@@ -423,16 +442,32 @@ const App = {
     const container = document.getElementById('weeks-list');
     const cycle = this.getCycle();
 
+    // Today detection
+    const todayIdx = new Date().getDay(); // 0=Sun, 1=Mon...
+    const dayMap = { 'Пн': 1, 'Вт': 2, 'Ср': 3, 'Чт': 4, 'Пт': 5, 'Сб': 6, 'Вс': 0 };
+    const trainingDays = this.data.trainingDays || ['Пн', 'Ср', 'Пт'];
+
     container.innerHTML = PROGRAM.map(week => {
-      const daysHtml = week.days.map(day => {
+      // Check if all days completed/skipped
+      const allDone = week.days.every(day => {
+        const wo = cycle.workouts ? cycle.workouts[`${week.week}-${day.day}`] : null;
+        return wo && (wo.completed || wo.skipped);
+      });
+      const isCollapsed = allDone && !this._expandedWeeks[week.week];
+
+      const daysHtml = week.days.map((day, di) => {
         const key = `${week.week}-${day.day}`;
         const workout = cycle.workouts ? cycle.workouts[key] : null;
         const completed = workout && workout.completed;
         const skipped = workout && workout.skipped;
         const cls = completed ? 'completed' : (skipped ? 'skipped' : '');
+        // Today highlight: match training day to real weekday
+        const mappedDay = trainingDays[di] || day.day;
+        const isToday = dayMap[mappedDay] === todayIdx && !completed && !skipped;
+        const todayCls = isToday ? ' today' : '';
         const label = completed ? day.day + ' &#10003;' : (skipped ? day.day + ' &#10007;' : day.day);
 
-        return `<div class="day-chip ${cls}" onclick="event.stopPropagation(); App.openDay(${week.week}, '${day.day}')">${label}</div>`;
+        return `<div class="day-chip ${cls}${todayCls}" onclick="event.stopPropagation(); App.openDay(${week.week}, '${day.day}')">${label}</div>`;
       }).join('');
 
       // Volume preview
@@ -444,8 +479,16 @@ const App = {
         });
       });
 
+      if (isCollapsed) {
+        return `<div class="week-card week-collapsed" onclick="App.expandWeek(${week.week})">
+          <span class="week-number">Неделя ${week.week}</span>
+          <span class="week-title">${week.title}</span>
+          <span class="week-done-badge">${week.days.length}/${week.days.length}</span>
+        </div>`;
+      }
+
       return `
-        <div class="week-card">
+        <div class="week-card" ${allDone ? `onclick="App.expandWeek(${week.week})"` : ''}>
           <div class="week-header">
             <span class="week-number">Неделя ${week.week}</span>
             <span class="week-title">${week.title}</span>
@@ -495,6 +538,11 @@ const App = {
     const workout = cycle.workouts ? cycle.workouts[workoutKey] : null;
 
     document.getElementById('day-title').textContent = `Неделя ${this.currentWeek} - ${this.currentDay}`;
+    // Show/hide nav arrows
+    const list = this._getDaysList();
+    const dayIdx = list.findIndex(d => d.week === this.currentWeek && d.day === this.currentDay);
+    document.getElementById('btn-prev-day').style.visibility = dayIdx > 0 ? 'visible' : 'hidden';
+    document.getElementById('btn-next-day').style.visibility = dayIdx < list.length - 1 ? 'visible' : 'hidden';
 
     // Skip section
     const container = document.getElementById('exercises-list');
@@ -726,6 +774,15 @@ const App = {
       }
     }
 
+    // Check if all sets done → show "Next exercise" button
+    const allEx = dayData.exercises[this.currentExIndex];
+    const allSaved = workout && workout.exercises ? workout.exercises[this.currentExIndex] : null;
+    const allTotal = this.getTotalSets(allEx);
+    const allDone = allSaved ? (allSaved.completedSets || 0) : 0;
+    if (allDone >= allTotal && allTotal > 0) {
+      html += `<button class="btn-next-exercise" onclick="App.advanceToNextExercise()">Следующее упражнение &rarr;</button>`;
+    }
+
     container.innerHTML = html;
   },
 
@@ -869,8 +926,10 @@ const App = {
         <div class="set-row ${done ? 'set-done' : ''}">
           <div class="set-number">${i + 1}</div>
           <div class="set-info">
-            <div class="set-weight individual" onclick="App.showSetWeightInput(${i}, ${isSuperset})">
-              ${setWeight ? setWeight + ' кг' : 'Указать вес'}
+            <div class="set-weight-inline">
+              <button class="weight-adj" onclick="event.stopPropagation(); App.quickAdjustWeight(${i}, -2.5, ${isSuperset})">−</button>
+              <span class="set-weight individual" onclick="App.showSetWeightInput(${i}, ${isSuperset})">${setWeight ? setWeight + ' кг' : 'Вес'}</span>
+              <button class="weight-adj" onclick="event.stopPropagation(); App.quickAdjustWeight(${i}, 2.5, ${isSuperset})">+</button>
             </div>
             ${perSideHtml}
             ${this.repsHtml(i, ex.reps, actualReps, isSuperset)}
@@ -1587,6 +1646,184 @@ const App = {
     this.renderExerciseInfoModal(title, this._infoRecords, this._infoAllCycles, this._infoShowAll);
   },
 
+  // ==================== СВАЙПЫ И НАВИГАЦИЯ ====================
+  initSwipeGestures() {
+    let startX = 0, startY = 0, swiping = null;
+    document.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      swiping = null;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 20) {
+        swiping = dx > 0 ? 'right' : 'left';
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      if (!swiping) return;
+      const dx = e.changedTouches[0].clientX - startX;
+      // Swipe on day screen → navigate between days
+      if (document.getElementById('screen-day').classList.contains('active') && Math.abs(dx) > 80) {
+        if (swiping === 'left') this.nextDay();
+        else this.prevDay();
+      }
+      // Swipe on cycle card → reveal delete
+      const card = e.target.closest('.cycle-card');
+      if (card && swiping === 'left' && Math.abs(dx) > 80) {
+        card.style.transform = 'translateX(-80px)';
+        setTimeout(() => { card.style.transform = ''; }, 3000);
+      }
+      swiping = null;
+    });
+  },
+
+  _getDaysList() {
+    const list = [];
+    PROGRAM.forEach(w => w.days.forEach(d => list.push({ week: w.week, day: d.day })));
+    return list;
+  },
+
+  prevDay() {
+    const list = this._getDaysList();
+    const idx = list.findIndex(d => d.week === this.currentWeek && d.day === this.currentDay);
+    if (idx > 0) this.openDay(list[idx - 1].week, list[idx - 1].day);
+  },
+
+  nextDay() {
+    const list = this._getDaysList();
+    const idx = list.findIndex(d => d.week === this.currentWeek && d.day === this.currentDay);
+    if (idx < list.length - 1) this.openDay(list[idx + 1].week, list[idx + 1].day);
+  },
+
+  // ==================== INLINE WEIGHT ±BUTTONS ====================
+  quickAdjustWeight(setIdx, delta, isSuperset) {
+    const cycle = this.getCycle();
+    const workoutKey = `${this.currentWeek}-${this.currentDay}`;
+    if (!cycle.workouts) cycle.workouts = {};
+    if (!cycle.workouts[workoutKey]) {
+      cycle.workouts[workoutKey] = { exercises: {}, date: new Date().toISOString(), completed: false };
+    }
+    const workout = cycle.workouts[workoutKey];
+    if (!workout.exercises) workout.exercises = {};
+    const exKey = this.currentExIndex;
+    if (!workout.exercises[exKey]) workout.exercises[exKey] = { sets: {}, completedSets: 0 };
+
+    let exData = isSuperset
+      ? (workout.exercises[exKey].superset || (workout.exercises[exKey].superset = { sets: {}, completedSets: 0 }))
+      : workout.exercises[exKey];
+
+    if (!exData.setWeights) exData.setWeights = {};
+    const current = exData.setWeights[setIdx] !== undefined ? exData.setWeights[setIdx] : (exData.weight || 0);
+    const newW = Math.max(0, Math.round((current + delta) * 10) / 10);
+    this.saveSetWeight(setIdx, newW, isSuperset);
+  },
+
+  // ==================== ADVANCE TO NEXT EXERCISE ====================
+  advanceToNextExercise() {
+    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const dayData = weekData.days.find(d => d.day === this.currentDay);
+    const cycle = this.getCycle();
+    const workoutKey = `${this.currentWeek}-${this.currentDay}`;
+    const workout = cycle.workouts ? cycle.workouts[workoutKey] : null;
+
+    for (let i = this.currentExIndex + 1; i < dayData.exercises.length; i++) {
+      const ex = dayData.exercises[i];
+      const saved = workout && workout.exercises ? workout.exercises[i] : null;
+      const totalSets = this.getTotalSets(ex);
+      const completedSets = saved ? (saved.completedSets || 0) : 0;
+      if (completedSets < totalSets) {
+        this.openExercise(i);
+        return;
+      }
+    }
+    this.showToast('Тренировка завершена!');
+    this.showDay();
+  },
+
+  // ==================== COLLAPSE WEEKS ====================
+  expandWeek(n) {
+    this._expandedWeeks[n] = !this._expandedWeeks[n];
+    this.renderWeeks();
+  },
+
+  // ==================== ЭКРАН: НАСТРОЙКИ ====================
+  showSettings() {
+    this.showScreen('settings');
+    this.renderSettings();
+  },
+
+  renderSettings() {
+    const container = document.getElementById('settings-content');
+    const allDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const selected = this.data.trainingDays || ['Пн', 'Ср', 'Пт'];
+
+    let daysHtml = allDays.map(d => {
+      const isActive = selected.includes(d);
+      return `<button class="settings-day-btn ${isActive ? 'active' : ''}" onclick="App.toggleTrainingDay('${d}')">${d}</button>`;
+    }).join('');
+
+    const barWeight = this.data.barWeight || 20;
+    const weightStep = this.data.weightStep || 0.5;
+
+    container.innerHTML = `
+      <div class="settings-section">
+        <div class="settings-label">Дни тренировок</div>
+        <div class="settings-hint">Выбери 3 дня, в которые тренируешься</div>
+        <div class="settings-days-row">${daysHtml}</div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">Вес грифа (кг)</div>
+        <input type="number" id="settings-bar-weight" class="form-input" value="${barWeight}" step="0.5" inputmode="decimal" onchange="App.saveBarWeightSetting(this.value)">
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">Шаг округления веса</div>
+        <div class="settings-hint">Минимальный шаг блинов</div>
+        <div class="settings-step-row">
+          <button class="settings-step-btn ${weightStep === 0.5 ? 'active' : ''}" onclick="App.setWeightStep(0.5)">0.5 кг</button>
+          <button class="settings-step-btn ${weightStep === 1 ? 'active' : ''}" onclick="App.setWeightStep(1)">1 кг</button>
+          <button class="settings-step-btn ${weightStep === 2.5 ? 'active' : ''}" onclick="App.setWeightStep(2.5)">2.5 кг</button>
+        </div>
+      </div>
+    `;
+  },
+
+  toggleTrainingDay(day) {
+    let days = this.data.trainingDays || ['Пн', 'Ср', 'Пт'];
+    if (days.includes(day)) {
+      if (days.length <= 1) return; // keep at least 1
+      days = days.filter(d => d !== day);
+    } else {
+      if (days.length >= 3) {
+        // Remove the first selected, add new one
+        days.shift();
+      }
+      days.push(day);
+    }
+    // Sort by weekday order
+    const order = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    days.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    this.data.trainingDays = days;
+    this.saveData();
+    this.renderSettings();
+  },
+
+  saveBarWeightSetting(val) {
+    const w = parseFloat(val);
+    if (!w || w <= 0) return;
+    this.data.barWeight = w;
+    this.saveData();
+  },
+
+  setWeightStep(step) {
+    this.data.weightStep = step;
+    this.saveData();
+    this.renderSettings();
+  },
+
   // ==================== ТАЙМЕР ====================
   setTimer(seconds) {
     this.timerTarget = seconds;
@@ -1736,6 +1973,12 @@ const App = {
         });
       } catch (e) {}
     }
+
+    // Auto-scroll to next unchecked set
+    setTimeout(() => {
+      const next = document.querySelector('.set-check:not(.done)');
+      if (next) next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
 
     // Звуковой сигнал через Web Audio API
     try {
@@ -3056,8 +3299,8 @@ const App = {
   },
 
   roundWeight(weight) {
-    // Округление до 0.5 кг (минимальный шаг блинов)
-    return Math.round(weight * 2) / 2;
+    const step = this.data.weightStep || 0.5;
+    return Math.round(weight / step) * step;
   },
 
   escapeHtml(str) {
