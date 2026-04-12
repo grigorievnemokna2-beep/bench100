@@ -131,7 +131,7 @@ const App = {
           return;
         }
         const valid = imported.cycles.every(c =>
-          c && typeof c === 'object' && c.id && typeof c.maxWeight === 'number' && c.maxWeight > 0
+          c && typeof c === 'object' && c.id && typeof c.maxWeight === 'number' && c.maxWeight >= 0
         );
         if (!valid) {
           this.showToast('Файл содержит повреждённые данные');
@@ -139,6 +139,9 @@ const App = {
         }
         if (!confirm(`Восстановить данные? (${imported.cycles.length} проходок)\nТекущие данные будут заменены.`)) return;
         this.data = imported;
+        if (this.data.barWeight === undefined) this.data.barWeight = 20;
+        if (!this.data.trainingDays) this.data.trainingDays = ['Пн', 'Ср', 'Пт'];
+        if (!this.data.weightStep) this.data.weightStep = 0.5;
         this.migrateData();
         this.saveData();
         this.showCycles();
@@ -316,11 +319,12 @@ const App = {
       cycle.workouts[key] = { exercises: {}, date: new Date().toISOString(), completed: false };
     }
     const reason = prompt('Причина пропуска (необязательно):');
-    if (reason === null) return;
+    if (reason === null) return false;
     cycle.workouts[key].skipped = true;
     cycle.workouts[key].skipReason = reason || '';
     this.saveData();
     this.renderWeeks();
+    return true;
   },
 
   unskipWorkout(week, day) {
@@ -556,7 +560,7 @@ const App = {
         : `<div class="skip-reason">Тренировка пропущена</div>`;
       skipHtml += `<div class="skip-section"><button class="btn-unskip" onclick="App.unskipWorkout(${this.currentWeek}, '${this.currentDay}'); App.showDay()">Отменить пропуск</button></div>`;
     } else if (!isCompleted) {
-      skipHtml += `<div class="skip-section"><button class="btn-skip" onclick="App.skipWorkout(${this.currentWeek}, '${this.currentDay}'); App.showWeeks()">&#10007; Пропустить тренировку</button></div>`;
+      skipHtml += `<div class="skip-section"><button class="btn-skip" onclick="if(App.skipWorkout(${this.currentWeek}, '${this.currentDay}')) App.showWeeks()">&#10007; Пропустить тренировку</button></div>`;
     }
 
     this.renderExercises(dayData, workout, cycle.maxWeight, skipHtml);
@@ -683,8 +687,12 @@ const App = {
       }
 
       // Выполнение
-      const completedSets = saved ? (saved.completedSets || 0) : 0;
+      let completedSets = saved ? (saved.completedSets || 0) : 0;
       const totalSets = this.getTotalSets(ex);
+      // Include superset completion
+      if (ex.superset && saved && saved.superset) {
+        completedSets += saved.superset.completedSets || 0;
+      }
       if (completedSets > 0) {
         checkHtml = `<div class="ex-check">${completedSets >= totalSets ? '&#10003; Выполнено' : `${completedSets}/${totalSets} подходов`}</div>`;
       }
@@ -702,7 +710,7 @@ const App = {
       return `
         <div class="exercise-card ${baseCls} ${typeCls} ${doneClass}" onclick="App.openExercise(${idx})">
           <button class="ex-info-btn" onclick="event.stopPropagation(); App.showExerciseInfo(${idx})" title="Инфо">i</button>
-          <div class="ex-name">${customName}</div>
+          <div class="ex-name">${this.escapeHtml(customName)}</div>
           <div class="ex-details">${detailsHtml}</div>
           ${supersetHtml}
           ${noteHtml}
@@ -1107,11 +1115,13 @@ const App = {
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const ex = dayData.exercises[this.currentExIndex];
 
+    if (!workout.exercises[exKey].sets) workout.exercises[exKey].sets = {};
+    if (!workout.exercises[exKey].sets[0]) workout.exercises[exKey].sets[0] = {};
     if (reps >= ex.totalReps) {
-      workout.exercises[exKey].sets = { 0: { done: true } };
+      workout.exercises[exKey].sets[0].done = true;
       workout.exercises[exKey].completedSets = 1;
     } else {
-      workout.exercises[exKey].sets = { 0: { done: false } };
+      workout.exercises[exKey].sets[0].done = false;
       workout.exercises[exKey].completedSets = 0;
     }
 
@@ -1425,7 +1435,8 @@ const App = {
     this._infoShowAll = false;
     this._infoCurrentEx = ex;
     this._infoCurrentCycle = cycle;
-    this.renderExerciseInfoModal(ex.name, records, allCycles, false);
+    this._infoTitle = this.getExerciseName(this.currentWeek, this.currentDay, exIdx, ex.name);
+    this.renderExerciseInfoModal(this._infoTitle, records, allCycles, false);
   },
 
   renderExerciseInfoModal(name, records, allCycles, showAll) {
@@ -1647,17 +1658,18 @@ const App = {
 
   toggleInfoShowAll() {
     this._infoShowAll = !this._infoShowAll;
-    const title = document.getElementById('modal-info-title').textContent;
-    this.renderExerciseInfoModal(title, this._infoRecords, this._infoAllCycles, this._infoShowAll);
+    this.renderExerciseInfoModal(this._infoTitle, this._infoRecords, this._infoAllCycles, this._infoShowAll);
   },
 
   // ==================== УПРАВЛЕНИЕ ТРЕНИРОВКОЙ ====================
   startWorkout(realDay) {
     if (!realDay) {
-      // Show day picker instead of starting immediately
       this._showDayPicker();
       return;
     }
+    // Hide day picker
+    const picker = document.getElementById('day-picker');
+    if (picker) picker.style.display = 'none';
     const cycle = this.getCycle();
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
     if (!cycle.workouts) cycle.workouts = {};
@@ -1704,6 +1716,7 @@ const App = {
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
     if (cycle.workouts && cycle.workouts[workoutKey]) {
       cycle.workouts[workoutKey].finishedAt = new Date().toISOString();
+      cycle.workouts[workoutKey].completed = true;
     }
     // Stop timer, wake lock, media session
     this.resetTimer();
@@ -1726,6 +1739,8 @@ const App = {
       const dy = e.touches[0].clientY - startY;
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 20) {
         swiping = dx > 0 ? 'right' : 'left';
+      } else {
+        swiping = null;
       }
     }, { passive: true });
 
@@ -2064,6 +2079,8 @@ const App = {
       playBeep(880, ctx.currentTime + 0.2, 0.15);
       playBeep(1200, ctx.currentTime + 0.4, 0.3);
     } catch (e) {}
+
+    this.updateFloatingTimer();
   },
 
   // ==================== MEDIA SESSION (экран блокировки) ====================
@@ -2192,6 +2209,9 @@ const App = {
 
     this.timerSeconds = seconds;
     this.timerTarget = seconds;
+    if (this.timerRunning) {
+      this.timerEndAt = Date.now() + seconds * 1000;
+    }
     this.updateTimerDisplay();
     this.closeModal();
   },
@@ -2698,7 +2718,7 @@ const App = {
                     if (wt > mxW) mxW = wt;
                     const nm = ex.name.toLowerCase();
                     if (nm.includes('жим') && (nm.includes('лежа') || nm.includes('штанг'))) {
-                      const e1rm = this.calc1RM(wt, seg.reps);
+                      const e1rm = this.calc1RM(wt, actR);
                       if (e1rm > best1rm) best1rm = e1rm;
                     }
                   }
