@@ -688,10 +688,11 @@ const App = {
 
       // Выполнение
       let completedSets = saved ? (saved.completedSets || 0) : 0;
-      const totalSets = this.getTotalSets(ex);
-      // Include superset completion
-      if (ex.superset && saved && saved.superset) {
-        completedSets += saved.superset.completedSets || 0;
+      let totalSets = this.getTotalSets(ex);
+      // Include superset in both numerator and denominator
+      if (ex.superset) {
+        totalSets += ex.superset.sets || 0;
+        if (saved && saved.superset) completedSets += saved.superset.completedSets || 0;
       }
       if (completedSets > 0) {
         checkHtml = `<div class="ex-check">${completedSets >= totalSets ? '&#10003; Выполнено' : `${completedSets}/${totalSets} подходов`}</div>`;
@@ -796,11 +797,15 @@ const App = {
       }
     }
 
-    // Check if all sets done → show "Next exercise" button
+    // Check if all sets done (including superset) → show "Next exercise" button
     const allEx = dayData.exercises[this.currentExIndex];
     const allSaved = workout && workout.exercises ? workout.exercises[this.currentExIndex] : null;
-    const allTotal = this.getTotalSets(allEx);
-    const allDone = allSaved ? (allSaved.completedSets || 0) : 0;
+    let allTotal = this.getTotalSets(allEx);
+    let allDone = allSaved ? (allSaved.completedSets || 0) : 0;
+    if (allEx.superset) {
+      allTotal += allEx.superset.sets || 0;
+      allDone += allSaved && allSaved.superset ? (allSaved.superset.completedSets || 0) : 0;
+    }
     if (allDone >= allTotal && allTotal > 0) {
       html += `<button class="btn-next-exercise" onclick="App.advanceToNextExercise()">Следующее упражнение &rarr;</button>`;
     }
@@ -909,7 +914,7 @@ const App = {
         const actualReps = this.getActualReps(saved, setNum - 1, seg.reps);
 
         html += `
-          <div class="set-row">
+          <div class="set-row ${done ? 'set-done' : ''}">
             <div class="set-number">${setNum}</div>
             <div class="set-info">
               <div class="set-weight editable" onclick="App.showSetWeightInput(${setNum - 1}, false, ${calcWeight})">
@@ -975,7 +980,7 @@ const App = {
       const actualReps = this.getActualReps(saved, i, ex.reps);
 
       html += `
-        <div class="set-row">
+        <div class="set-row ${done ? 'set-done' : ''}">
           <div class="set-number">${i + 1}</div>
           <div class="set-info">
             <div class="set-weight" style="color: var(--t3)">Без веса</div>
@@ -1814,8 +1819,12 @@ const App = {
     for (let i = this.currentExIndex + 1; i < dayData.exercises.length; i++) {
       const ex = dayData.exercises[i];
       const saved = workout && workout.exercises ? workout.exercises[i] : null;
-      const totalSets = this.getTotalSets(ex);
-      const completedSets = saved ? (saved.completedSets || 0) : 0;
+      let totalSets = this.getTotalSets(ex);
+      let completedSets = saved ? (saved.completedSets || 0) : 0;
+      if (ex.superset) {
+        totalSets += ex.superset.sets || 0;
+        completedSets += saved && saved.superset ? (saved.superset.completedSets || 0) : 0;
+      }
       if (completedSets < totalSets) {
         this.openExercise(i);
         return;
