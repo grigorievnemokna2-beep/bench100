@@ -941,9 +941,9 @@ const App = {
           <div class="set-number">${i + 1}</div>
           <div class="set-info">
             <div class="set-weight-inline">
-              <button class="weight-adj" onclick="event.stopPropagation(); App.quickAdjustWeight(${i}, -2.5, ${isSuperset})">−</button>
+              <button class="weight-adj" onclick="event.stopPropagation(); App.quickAdjustWeight(${i}, -(App.data.weightStep||2.5), ${isSuperset})">−</button>
               <span class="set-weight individual" onclick="App.showSetWeightInput(${i}, ${isSuperset})">${setWeight ? setWeight + ' кг' : 'Вес'}</span>
-              <button class="weight-adj" onclick="event.stopPropagation(); App.quickAdjustWeight(${i}, 2.5, ${isSuperset})">+</button>
+              <button class="weight-adj" onclick="event.stopPropagation(); App.quickAdjustWeight(${i}, App.data.weightStep||2.5, ${isSuperset})">+</button>
             </div>
             ${perSideHtml}
             ${this.repsHtml(i, ex.reps, actualReps, isSuperset)}
@@ -1142,14 +1142,10 @@ const App = {
 
   getTotalSets(ex) {
     if (ex.isSpecial) return ex.totalReps > 0 ? 1 : 1;
-    let total = 0;
     if (ex.segments && !ex.isIndividual) {
-      total = ex.segments.reduce((sum, seg) => sum + seg.sets, 0);
-    } else {
-      total = ex.sets || 0;
+      return ex.segments.reduce((sum, seg) => sum + seg.sets, 0);
     }
-    if (ex.superset) total += ex.superset.sets || 0;
-    return total;
+    return ex.sets || 0;
   },
 
   // ==================== ВВОД ВЕСА ====================
@@ -1709,6 +1705,8 @@ const App = {
     if (cycle.workouts && cycle.workouts[workoutKey]) {
       cycle.workouts[workoutKey].finishedAt = new Date().toISOString();
     }
+    // Stop timer, wake lock, media session
+    this.resetTimer();
     this.saveData();
     this.showToast('Тренировка завершена!');
     this.showDay();
@@ -2694,7 +2692,8 @@ const App = {
                   const wt = ov !== null ? ov : cW;
                   const dn = ed.sets && ed.sets[sn] && ed.sets[sn].done;
                   if (dn) {
-                    vol += wt * seg.reps;
+                    const actR = ed.sets[sn].actualReps !== undefined ? ed.sets[sn].actualReps : seg.reps;
+                    vol += wt * actR;
                     doneSets++;
                     if (wt > mxW) mxW = wt;
                     const nm = ex.name.toLowerCase();
@@ -2711,7 +2710,7 @@ const App = {
                 totalSetsW++;
                 const wt = ed.setWeights && ed.setWeights[i] !== undefined ? ed.setWeights[i] : (ed.weight || 0);
                 const dn = ed.sets && ed.sets[i] && ed.sets[i].done;
-                if (dn) { vol += wt * ex.reps; doneSets++; if (wt > mxW) mxW = wt; }
+                if (dn) { const actR = ed.sets[i].actualReps !== undefined ? ed.sets[i].actualReps : ex.reps; vol += wt * actR; doneSets++; if (wt > mxW) mxW = wt; }
               }
             } else if (ex.isBodyweight) {
               for (let i = 0; i < ex.sets; i++) {

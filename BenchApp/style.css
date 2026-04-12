@@ -178,7 +178,6 @@ body {
   transform: translateX(-50%);
   background: var(--accent);
   color: #000;
-  box-shadow: 0 4px 20px rgba(205, 255, 0, 0.3), 0 0 40px rgba(205, 255, 0, 0.1);
   border: none;
   padding: 15px 40px;
   border-radius: var(--r-pill);
@@ -186,7 +185,7 @@ body {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 20px var(--accent-glow);
+  box-shadow: 0 4px 20px rgba(205, 255, 0, 0.3), 0 0 40px rgba(205, 255, 0, 0.1);
   z-index: 10;
   transition: all 0.15s ease;
 }
@@ -417,23 +416,7 @@ body {
   transition: width 0.5s ease;
   box-shadow: 0 0 8px rgba(205, 255, 0, 0.5);
 }
-.cycle-delete {
-  position: absolute;
-  top: 14px; right: 14px;
-  background: var(--surface2);
-  border: none;
-  color: var(--t3);
-  font-size: 13px;
-  cursor: pointer;
-  padding: 5px 9px;
-  z-index: 2;
-  border-radius: 8px;
-  transition: all 0.12s;
-}
-.cycle-delete:active {
-  color: var(--accent);
-  background: var(--accent-muted);
-}
+/* .cycle-delete removed — replaced by swipe-action-delete */
 
 /* ============ WEEK CARDS ============ */
 .week-card {
@@ -1085,6 +1068,9 @@ body {
 }
 .timer-section.timer-warning {
   border-top-color: rgba(205, 255, 0, 0.25);
+}
+.timer-section.timer-done {
+  border-top-color: rgba(205, 255, 0, 0.4);
 }
 
 .timer-progress-bar {
@@ -2371,6 +2357,74 @@ body {
   font-weight: 600;
 }
 
+/* ============ SETTINGS ============ */
+.settings-section {
+  background: var(--surface);
+  border: 1px solid rgba(205, 255, 0, 0.15);
+  border-radius: var(--r-lg);
+  padding: 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 0 8px rgba(205, 255, 0, 0.06);
+}
+.settings-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--t1);
+  margin-bottom: 4px;
+}
+.settings-hint {
+  font-size: 12px;
+  color: var(--t3);
+  margin-bottom: 10px;
+}
+.settings-days-row {
+  display: flex;
+  gap: 5px;
+}
+.settings-day-btn {
+  flex: 1;
+  padding: 10px 4px;
+  background: var(--bg2);
+  border: 1px solid rgba(205, 255, 0, 0.1);
+  border-radius: var(--r-md);
+  color: var(--t3);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.settings-day-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(205, 255, 0, 0.25);
+}
+.settings-step-row {
+  display: flex;
+  gap: 6px;
+}
+.settings-step-btn {
+  flex: 1;
+  padding: 10px;
+  background: var(--bg2);
+  border: 1px solid rgba(205, 255, 0, 0.1);
+  border-radius: var(--r-md);
+  color: var(--t2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.settings-step-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
 /* ============ DAY PICKER ============ */
 .day-picker-overlay {
   position: fixed;
@@ -2651,88 +2705,4 @@ body {
   display: none;
 }
 
-/* ============ AUTO-ADVANCE HIGHLIGHT ============ */
-.set-row.highlight-next {
-  animation: highlightPulse 1s ease;
-}
-@keyframes highlightPulse {
-  0%, 100% { background: var(--surface); }
-  50% { background: rgba(205, 255, 0, 0.08); }
-}
-
-/* ============ INLINE WEIGHT ADJUSTMENT ============ */
-.set-weight-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.weight-adj {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid rgba(205, 255, 0, 0.2);
-  background: transparent;
-  color: var(--accent);
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.weight-adj:active {
-  background: var(--accent);
-  color: #000;
-}
-
-/* ============ START WORKOUT / NEXT EXERCISE ============ */
-.btn-start-workout {
-  display: block;
-  width: 100%;
-  padding: 14px 20px;
-  margin-bottom: 16px;
-  background: var(--accent);
-  color: #000;
-  border: none;
-  border-radius: var(--r-sm);
-  font-family: 'Oswald', sans-serif;
-  font-size: 17px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.btn-start-workout:active {
-  opacity: 0.7;
-}
-.btn-next-exercise {
-  display: block;
-  width: 100%;
-  padding: 14px 20px;
-  margin-top: 16px;
-  margin-bottom: 8px;
-  background: var(--accent);
-  color: #000;
-  border: none;
-  border-radius: var(--r-sm);
-  font-family: 'Oswald', sans-serif;
-  font-size: 16px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.btn-next-exercise:active {
-  opacity: 0.7;
-}
-.workout-complete-msg {
-  text-align: center;
-  padding: 16px;
-  margin-top: 16px;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--accent);
-}
+/* duplicate blocks removed — styles defined above */
