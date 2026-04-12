@@ -2371,6 +2371,62 @@ body {
   font-weight: 600;
 }
 
+/* ============ DAY PICKER ============ */
+.day-picker-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.day-picker-content {
+  background: var(--surface);
+  border: 1px solid rgba(205, 255, 0, 0.15);
+  border-radius: var(--r-xl);
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 0 30px rgba(205, 255, 0, 0.08);
+}
+.day-picker-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--t1);
+  margin-bottom: 16px;
+}
+.day-picker-row {
+  display: flex;
+  gap: 6px;
+}
+.day-pick-btn {
+  flex: 1;
+  padding: 12px 4px;
+  background: var(--bg2);
+  border: 1px solid rgba(205, 255, 0, 0.1);
+  border-radius: var(--r-md);
+  color: var(--t2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.day-pick-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(205, 255, 0, 0.3);
+}
+.day-pick-btn:active {
+  transform: scale(0.92);
+}
+
 /* ============ INLINE WEIGHT ±BUTTONS ============ */
 .set-weight-inline { display: flex; align-items: center; gap: 6px; }
 .weight-adj {

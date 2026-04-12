@@ -624,7 +624,8 @@ const App = {
       const startMs = new Date(workout.startedAt).getTime();
       const endMs = new Date(workout.finishedAt).getTime();
       const durMin = Math.round((endMs - startMs) / 60000);
-      html += `<div class="workout-finished-badge">Тренировка завершена — ${durMin} мин</div>`;
+      const dayLabel = workout.realDay ? ` (${workout.realDay})` : '';
+      html += `<div class="workout-finished-badge">Тренировка завершена${dayLabel} — ${durMin} мин</div>`;
     } else {
       html += `<div class="day-summary">
         <div class="day-summary-stat"><div class="day-summary-val">${totalEx}</div><div class="day-summary-label">упражнений</div></div>
@@ -1655,7 +1656,12 @@ const App = {
   },
 
   // ==================== УПРАВЛЕНИЕ ТРЕНИРОВКОЙ ====================
-  startWorkout() {
+  startWorkout(realDay) {
+    if (!realDay) {
+      // Show day picker instead of starting immediately
+      this._showDayPicker();
+      return;
+    }
     const cycle = this.getCycle();
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
     if (!cycle.workouts) cycle.workouts = {};
@@ -1663,10 +1669,38 @@ const App = {
       cycle.workouts[workoutKey] = { exercises: {}, date: new Date().toISOString(), completed: false };
     }
     cycle.workouts[workoutKey].startedAt = new Date().toISOString();
+    cycle.workouts[workoutKey].realDay = realDay;
     delete cycle.workouts[workoutKey].finishedAt;
     this.saveData();
-    this.showToast('Тренировка начата!');
+    this.showToast(`Тренировка начата (${realDay})!`);
     this.showDay();
+  },
+
+  _showDayPicker() {
+    const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const todayIdx = new Date().getDay();
+    const todayMap = { 0: 'Вс', 1: 'Пн', 2: 'Вт', 3: 'Ср', 4: 'Чт', 5: 'Пт', 6: 'Сб' };
+    const today = todayMap[todayIdx];
+
+    const btns = days.map(d =>
+      `<button class="day-pick-btn ${d === today ? 'active' : ''}" onclick="App.startWorkout('${d}')">${d}</button>`
+    ).join('');
+
+    let picker = document.getElementById('day-picker');
+    if (!picker) {
+      picker = document.createElement('div');
+      picker.id = 'day-picker';
+      picker.className = 'day-picker-overlay';
+      document.body.appendChild(picker);
+    }
+    picker.innerHTML = `
+      <div class="day-picker-content">
+        <div class="day-picker-title">Какой сегодня день?</div>
+        <div class="day-picker-row">${btns}</div>
+      </div>
+    `;
+    picker.style.display = 'flex';
+    picker.onclick = (e) => { if (e.target === picker) picker.style.display = 'none'; };
   },
 
   endWorkout() {
