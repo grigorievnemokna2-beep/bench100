@@ -596,29 +596,42 @@ const App = {
       }
     });
 
-    // Session elapsed time
+    // Session control (start/end workout)
+    const isActive = workout && workout.startedAt && !workout.finishedAt;
     let sessionHtml = '';
-    if (workout && workout.startedAt) {
+    if (isActive) {
       const startMs = new Date(workout.startedAt).getTime();
       const elapsedMs = Date.now() - startMs;
       const elapsedMin = Math.floor(elapsedMs / 60000);
-      if (elapsedMin > 0) {
-        const hrs = Math.floor(elapsedMin / 60);
-        const mins = elapsedMin % 60;
-        const elapsedStr = hrs > 0 ? `${hrs}ч ${mins}мин` : `${mins} мин`;
-        sessionHtml = `<div class="day-summary-stat session-duration"><div class="day-summary-val">${elapsedStr}</div><div class="day-summary-label">в зале</div></div>`;
-      }
+      const hrs = Math.floor(elapsedMin / 60);
+      const mins = elapsedMin % 60;
+      const elapsedStr = hrs > 0 ? `${hrs}ч ${mins}мин` : `${mins} мин`;
+      sessionHtml = `<div class="day-summary-stat session-duration"><div class="day-summary-val">${elapsedStr}</div><div class="day-summary-label">в зале</div></div>`;
     }
 
     let html = '';
-    if (totalSetsAll > 0) {
+
+    // Workout start/end controls
+    if (isActive) {
       html += `<div class="day-summary">
         <div class="day-summary-stat"><div class="day-summary-val">${doneEx}/${totalEx}</div><div class="day-summary-label">упражнений</div></div>
         <div class="day-summary-stat"><div class="day-summary-val">${doneSetsAll}/${totalSetsAll}</div><div class="day-summary-label">подходов</div></div>
         <div class="day-summary-stat"><div class="day-summary-val">${totalSetsAll > 0 ? Math.round((doneSetsAll / totalSetsAll) * 100) : 0}%</div><div class="day-summary-label">выполнено</div></div>
-        <div class="day-summary-stat"><div class="day-summary-val">~${Math.round(estMinutes)} мин</div><div class="day-summary-label">оценка</div></div>
         ${sessionHtml}
       </div>`;
+      html += `<button class="btn-end-workout" onclick="App.endWorkout()">Завершить тренировку</button>`;
+    } else if (workout && workout.finishedAt) {
+      const startMs = new Date(workout.startedAt).getTime();
+      const endMs = new Date(workout.finishedAt).getTime();
+      const durMin = Math.round((endMs - startMs) / 60000);
+      html += `<div class="workout-finished-badge">Тренировка завершена — ${durMin} мин</div>`;
+    } else {
+      html += `<div class="day-summary">
+        <div class="day-summary-stat"><div class="day-summary-val">${totalEx}</div><div class="day-summary-label">упражнений</div></div>
+        <div class="day-summary-stat"><div class="day-summary-val">${totalSetsAll}</div><div class="day-summary-label">подходов</div></div>
+        <div class="day-summary-stat"><div class="day-summary-val">~${Math.round(estMinutes)}</div><div class="day-summary-label">минут</div></div>
+      </div>`;
+      html += `<button class="btn-start-workout" onclick="App.startWorkout()">Начать тренировку</button>`;
     }
 
     html += skipHtml;
@@ -1023,11 +1036,6 @@ const App = {
 
     const workout = cycle.workouts[workoutKey];
     if (!workout.exercises) workout.exercises = {};
-
-    // Session duration: save start time on first set checked
-    if (!workout.startedAt) {
-      workout.startedAt = new Date().toISOString();
-    }
 
     const exKey = this.currentExIndex;
     if (!workout.exercises[exKey]) {
@@ -1644,6 +1652,32 @@ const App = {
     this._infoShowAll = !this._infoShowAll;
     const title = document.getElementById('modal-info-title').textContent;
     this.renderExerciseInfoModal(title, this._infoRecords, this._infoAllCycles, this._infoShowAll);
+  },
+
+  // ==================== УПРАВЛЕНИЕ ТРЕНИРОВКОЙ ====================
+  startWorkout() {
+    const cycle = this.getCycle();
+    const workoutKey = `${this.currentWeek}-${this.currentDay}`;
+    if (!cycle.workouts) cycle.workouts = {};
+    if (!cycle.workouts[workoutKey]) {
+      cycle.workouts[workoutKey] = { exercises: {}, date: new Date().toISOString(), completed: false };
+    }
+    cycle.workouts[workoutKey].startedAt = new Date().toISOString();
+    delete cycle.workouts[workoutKey].finishedAt;
+    this.saveData();
+    this.showToast('Тренировка начата!');
+    this.showDay();
+  },
+
+  endWorkout() {
+    const cycle = this.getCycle();
+    const workoutKey = `${this.currentWeek}-${this.currentDay}`;
+    if (cycle.workouts && cycle.workouts[workoutKey]) {
+      cycle.workouts[workoutKey].finishedAt = new Date().toISOString();
+    }
+    this.saveData();
+    this.showToast('Тренировка завершена!');
+    this.showDay();
   },
 
   // ==================== СВАЙПЫ И НАВИГАЦИЯ ====================
