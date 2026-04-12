@@ -99,7 +99,11 @@ const App = {
 
   // Сохранение данных в localStorage
   saveData() {
-    localStorage.setItem('bench100_data', JSON.stringify(this.data));
+    try {
+      localStorage.setItem('bench100_data', JSON.stringify(this.data));
+    } catch (e) {
+      this.showToast('Ошибка сохранения! Освободи память.');
+    }
   },
 
   // ==================== БЭКАП ====================
@@ -322,6 +326,7 @@ const App = {
     if (reason === null) return false;
     cycle.workouts[key].skipped = true;
     cycle.workouts[key].skipReason = reason || '';
+    this.resetTimer();
     this.saveData();
     this.renderWeeks();
     return true;
@@ -576,8 +581,12 @@ const App = {
     let doneSetsAll = 0;
     dayData.exercises.forEach((ex, idx) => {
       const s = workout && workout.exercises ? workout.exercises[idx] : null;
-      const ts = this.getTotalSets(ex);
-      const ds = s ? (s.completedSets || 0) : 0;
+      let ts = this.getTotalSets(ex);
+      let ds = s ? (s.completedSets || 0) : 0;
+      if (ex.superset) {
+        ts += ex.superset.sets || 0;
+        ds += s && s.superset ? (s.superset.completedSets || 0) : 0;
+      }
       totalSetsAll += ts;
       doneSetsAll += ds;
       if (ds >= ts && ts > 0) doneEx++;
@@ -596,7 +605,7 @@ const App = {
         estMinutes += sets * (1.5 + 0.5); // 1.5min rest + 0.5min per set
       }
       if (ex.superset) {
-        estMinutes += (ex.superset.sets || 0) * (1.5 + 0.5);
+        estMinutes += (ex.superset.sets || 0) * 0.5; // only execution time, rest shared
       }
     });
 
@@ -628,7 +637,7 @@ const App = {
       const startMs = new Date(workout.startedAt).getTime();
       const endMs = new Date(workout.finishedAt).getTime();
       const durMin = Math.round((endMs - startMs) / 60000);
-      const dayLabel = workout.realDay ? ` (${workout.realDay})` : '';
+      const dayLabel = workout.realDay ? ` (${this.escapeHtml(workout.realDay)})` : '';
       html += `<div class="workout-finished-badge">Тренировка завершена${dayLabel} — ${durMin} мин</div>`;
     } else {
       html += `<div class="day-summary">
@@ -677,7 +686,7 @@ const App = {
       // Суперсет
       let supersetHtml = '';
       if (ex.superset) {
-        supersetHtml = `<span class="superset-tag">+ суперсет: ${ex.superset.name}</span>`;
+        supersetHtml = `<span class="superset-tag">+ суперсет: ${this.escapeHtml(ex.superset.name)}</span>`;
       }
 
       // Заметка
@@ -1721,7 +1730,6 @@ const App = {
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
     if (cycle.workouts && cycle.workouts[workoutKey]) {
       cycle.workouts[workoutKey].finishedAt = new Date().toISOString();
-      cycle.workouts[workoutKey].completed = true;
     }
     // Stop timer, wake lock, media session
     this.resetTimer();

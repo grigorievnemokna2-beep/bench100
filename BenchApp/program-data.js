@@ -338,7 +338,7 @@ const PROGRAM = [
         day: "Ср",
         exercises: [
           {
-            name: "Жим штанги на скамье 30\u00B0",
+            name: "Жим штанги лежа на скамье 30\u00B0",
             isBase: true,
             segments: [{ percent: 60, reps: 6, sets: 5 }]
           },
@@ -903,7 +903,7 @@ const PROGRAM = [
             ]
           },
           {
-            name: "Жим штанги лежа с бруска",
+            name: "Жим штанги лежа с бруском",
             isBase: true,
             segments: [{ percent: 100, reps: 1, sets: 2 }]
           },
