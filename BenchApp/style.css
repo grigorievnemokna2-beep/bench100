@@ -2351,6 +2351,26 @@ body {
 }
 .btn-end-workout:active { opacity: 0.5; }
 
+.btn-reset-workout {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  margin-bottom: 10px;
+  background: transparent;
+  color: var(--t3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-reset-workout:active {
+  color: #ff3b30;
+  border-color: rgba(255, 59, 48, 0.3);
+}
+
 .workout-finished-badge {
   text-align: center;
   padding: 10px;

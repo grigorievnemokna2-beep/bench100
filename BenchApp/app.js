@@ -480,9 +480,10 @@ const App = {
         const mappedDay = trainingDays[di] || day.day;
         const isToday = dayMap[mappedDay] === todayIdx && !completed && !skipped;
         const todayCls = isToday ? ' today' : '';
-        const label = completed ? day.day + ' &#10003;' : (skipped ? day.day + ' &#10007;' : day.day);
+        const realDay = workout && workout.realDay ? workout.realDay : '';
+        const chipLabel = realDay && completed ? `${realDay} &#10003;` : (completed ? day.day + ' &#10003;' : (skipped ? day.day + ' &#10007;' : (realDay ? realDay : day.day)));
 
-        return `<div class="day-chip ${cls}${todayCls}" onclick="event.stopPropagation(); App.openDay(${week.week}, '${day.day}')">${label}</div>`;
+        return `<div class="day-chip ${cls}${todayCls}" onclick="event.stopPropagation(); App.openDay(${week.week}, '${day.day}')">${chipLabel}</div>`;
       }).join('');
 
       // Volume preview
@@ -646,6 +647,7 @@ const App = {
       const durMin = Math.round((endMs - startMs) / 60000);
       const dayLabel = workout.realDay ? ` (${this.escapeHtml(workout.realDay)})` : '';
       html += `<div class="workout-finished-badge">Тренировка завершена${dayLabel} — ${durMin} мин</div>`;
+      html += `<button class="btn-reset-workout" onclick="App.resetWorkout()">Сбросить и пройти заново</button>`;
     } else {
       html += `<div class="day-summary">
         <div class="day-summary-stat"><div class="day-summary-val">${totalEx}</div><div class="day-summary-label">упражнений</div></div>
@@ -1735,6 +1737,19 @@ const App = {
     `;
     picker.style.display = 'flex';
     picker.onclick = (e) => { if (e.target === picker) picker.style.display = 'none'; };
+  },
+
+  resetWorkout() {
+    if (!confirm('Сбросить все данные этой тренировки и начать заново?')) return;
+    const cycle = this.getCycle();
+    const workoutKey = `${this.currentWeek}-${this.currentDay}`;
+    if (cycle.workouts && cycle.workouts[workoutKey]) {
+      delete cycle.workouts[workoutKey];
+    }
+    this.resetTimer();
+    this.saveData();
+    this.showToast('Тренировка сброшена');
+    this.showDay();
   },
 
   endWorkout() {
