@@ -98,6 +98,24 @@ const App = {
       this.data.version = 1;
       this.saveData();
     }
+    if (v < 2) {
+      if (this.data.cycles) {
+        this.data.cycles.forEach(c => {
+          if (!c.programVersion) c.programVersion = PROGRAM_VERSION_LEGACY;
+        });
+      }
+      this.data.version = 2;
+      this.saveData();
+    } else if (this.data.cycles) {
+      let repaired = false;
+      this.data.cycles.forEach(c => {
+        if (!c.programVersion) {
+          c.programVersion = PROGRAM_VERSION_LEGACY;
+          repaired = true;
+        }
+      });
+      if (repaired) this.saveData();
+    }
   },
 
   // Сохранение данных в localStorage
@@ -247,18 +265,20 @@ const App = {
           </div>
         </button>
       `;
-    } else if (lastCycle && this.getCompletedWorkouts(lastCycle) >= this.getTotalWorkouts()) {
+    } else if (lastCycle && this.getCompletedWorkouts(lastCycle) >= this.getTotalWorkouts(lastCycle)) {
       html += '<div class="workout-finished-badge">Программа завершена!</div>';
     }
 
     html += this.data.cycles.map(cycle => {
-      const totalWorkouts = this.getTotalWorkouts();
+      const program = this.getCycleProgram(cycle);
+      const programLabel = Number(cycle.programVersion) >= PROGRAM_VERSION_BICEPS ? 'Бицепс v2' : 'Классическая';
+      const totalWorkouts = this.getTotalWorkouts(cycle);
       const completedWorkouts = this.getCompletedWorkouts(cycle);
       const progressPercent = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
 
       // Current week calculation
-      let currentWeek = 9;
-      for (const week of PROGRAM) {
+      let currentWeek = program.length;
+      for (const week of program) {
         let weekDone = true;
         for (const day of week.days) {
           const wo = cycle.workouts ? cycle.workouts[`${week.week}-${day.day}`] : null;
@@ -282,6 +302,8 @@ const App = {
               <span>${progressPercent}%</span>
               &nbsp;&middot;&nbsp;
               <span>Неделя ${currentWeek} из 9</span>
+              &nbsp;&middot;&nbsp;
+              <span>${programLabel}</span>
             </div>
             <div class="cycle-progress-bar">
               <div class="cycle-progress-fill" style="width: ${progressPercent}%"></div>
@@ -294,9 +316,9 @@ const App = {
     container.innerHTML = html;
   },
 
-  getTotalWorkouts() {
+  getTotalWorkouts(cycle = null) {
     let total = 0;
-    PROGRAM.forEach(week => { total += week.days.length; });
+    this.getCycleProgram(cycle).forEach(week => { total += week.days.length; });
     return total;
   },
 
@@ -306,10 +328,11 @@ const App = {
   },
 
   getNextWorkout(cycle) {
+    const program = this.getCycleProgram(cycle);
     if (!cycle || !cycle.workouts) {
-      return { week: 1, day: PROGRAM[0].days[0].day };
+      return { week: 1, day: program[0].days[0].day };
     }
-    for (const week of PROGRAM) {
+    for (const week of program) {
       for (const day of week.days) {
         const key = `${week.week}-${day.day}`;
         const wo = cycle.workouts[key];
@@ -379,6 +402,7 @@ const App = {
       id: Date.now().toString(),
       name: name,
       maxWeight: maxWeight,
+      programVersion: ACTIVE_PROGRAM_VERSION,
       createdAt: new Date().toISOString(),
       workouts: {}
     };
@@ -453,16 +477,23 @@ const App = {
     return this.data.cycles.find(c => c.id === this.currentCycleId);
   },
 
+  getCycleProgram(cycle = null) {
+    const targetCycle = cycle || this.getCycle();
+    const version = targetCycle ? targetCycle.programVersion : ACTIVE_PROGRAM_VERSION;
+    return getProgramByVersion(version);
+  },
+
   renderWeeks() {
     const container = document.getElementById('weeks-list');
     const cycle = this.getCycle();
+    const program = this.getCycleProgram(cycle);
 
     // Today detection
     const todayIdx = new Date().getDay(); // 0=Sun, 1=Mon...
     const dayMap = { 'Пн': 1, 'Вт': 2, 'Ср': 3, 'Чт': 4, 'Пт': 5, 'Сб': 6, 'Вс': 0 };
     const trainingDays = this.data.trainingDays || ['Пн', 'Ср', 'Пт'];
 
-    container.innerHTML = PROGRAM.map(week => {
+    container.innerHTML = program.map(week => {
       // Check if all days completed/skipped
       const allDone = week.days.every(day => {
         const wo = cycle.workouts ? cycle.workouts[`${week.week}-${day.day}`] : null;
@@ -548,7 +579,7 @@ const App = {
     this.currentExIndex = null;
     this.showScreen('day');
 
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const cycle = this.getCycle();
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
@@ -758,7 +789,7 @@ const App = {
   },
 
   renderSets() {
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const ex = dayData.exercises[this.currentExIndex];
     const cycle = this.getCycle();
@@ -1104,7 +1135,7 @@ const App = {
     // Auto-start rest timer when marking set as done
     if (exData.sets[setIdx] && exData.sets[setIdx].done) {
       if (!this.timerRunning) {
-        const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+        const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
         const dayData = weekData.days.find(d => d.day === this.currentDay);
         const ex = dayData.exercises[this.currentExIndex];
         const restTime = ex.isBase ? 180 : 90;
@@ -1137,7 +1168,7 @@ const App = {
 
     workout.exercises[exKey].specialReps = reps;
 
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const ex = dayData.exercises[this.currentExIndex];
 
@@ -1156,7 +1187,7 @@ const App = {
   },
 
   checkWorkoutCompletion(workout) {
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
 
     let allDone = true;
@@ -1205,7 +1236,7 @@ const App = {
       currentWeight = defaultWeight;
     }
 
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const ex = dayData.exercises[this.currentExIndex];
     const exName = isSuperset && ex.superset ? ex.superset.name : this.getExerciseName(this.currentWeek, this.currentDay, this.currentExIndex, ex.name);
@@ -1260,7 +1291,7 @@ const App = {
     exData.weight = weight;
 
     // Auto-fill remaining empty sets with this weight
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const curEx = isSuperset
       ? dayData.exercises[this.currentExIndex].superset
@@ -1330,7 +1361,7 @@ const App = {
 
   editExerciseName() {
     this.closeModal();
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const ex = dayData.exercises[this.currentExIndex];
     const currentName = this.getExerciseName(this.currentWeek, this.currentDay, this.currentExIndex, ex.name);
@@ -1349,7 +1380,7 @@ const App = {
 
     const key = `${this.currentWeek}-${this.currentDay}-${this.currentExIndex}`;
 
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const ex = dayData.exercises[this.currentExIndex];
 
@@ -1368,7 +1399,7 @@ const App = {
   _infoShowAll: false,
 
   showExerciseInfo(exIdx) {
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const ex = dayData.exercises[exIdx];
     if (!ex || ex.isSpecial) return;
@@ -1382,7 +1413,7 @@ const App = {
 
     allCycles.forEach(c => {
       if (!c.workouts) return;
-      PROGRAM.forEach(week => {
+      this.getCycleProgram(c).forEach(week => {
         week.days.forEach(day => {
           const key = `${week.week}-${day.day}`;
           const workout = c.workouts[key];
@@ -1807,7 +1838,7 @@ const App = {
 
   _getDaysList() {
     const list = [];
-    PROGRAM.forEach(w => w.days.forEach(d => list.push({ week: w.week, day: d.day })));
+    this.getCycleProgram().forEach(w => w.days.forEach(d => list.push({ week: w.week, day: d.day })));
     return list;
   },
 
@@ -1848,7 +1879,7 @@ const App = {
 
   // ==================== ADVANCE TO NEXT EXERCISE ====================
   advanceToNextExercise() {
-    const weekData = PROGRAM.find(w => w.week === this.currentWeek);
+    const weekData = this.getCycleProgram().find(w => w.week === this.currentWeek);
     const dayData = weekData.days.find(d => d.day === this.currentDay);
     const cycle = this.getCycle();
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
@@ -2316,7 +2347,7 @@ const App = {
     let best1RM = 0;
     cycles.forEach(cycle => {
       if (!cycle.workouts) return;
-      PROGRAM.forEach(week => {
+      this.getCycleProgram(cycle).forEach(week => {
         week.days.forEach(day => {
           const key = `${week.week}-${day.day}`;
           const wo = cycle.workouts[key];
@@ -2353,7 +2384,7 @@ const App = {
   getStreak(cycle) {
     if (!cycle.workouts) return 0;
     const allKeys = [];
-    PROGRAM.forEach(week => {
+    this.getCycleProgram(cycle).forEach(week => {
       week.days.forEach(day => { allKeys.push(`${week.week}-${day.day}`); });
     });
     let streak = 0;
@@ -2375,7 +2406,7 @@ const App = {
   getWeekComparison(cycle) {
     if (!cycle.workouts) return null;
     const weekData = [];
-    PROGRAM.forEach(week => {
+    this.getCycleProgram(cycle).forEach(week => {
       let vol = 0, sets = 0;
       week.days.forEach(day => {
         const wo = cycle.workouts[`${week.week}-${day.day}`];
@@ -2420,7 +2451,7 @@ const App = {
     let html = '<div class="cal-grid">';
     html += '<div class="cal-header">Нед</div>';
     ['Пн','Ср','Пт'].forEach(d => { html += `<div class="cal-header">${d}</div>`; });
-    PROGRAM.forEach(week => {
+    this.getCycleProgram(cycle).forEach(week => {
       html += `<div class="cal-week-num">${week.week}</div>`;
       week.days.forEach(day => {
         const key = `${week.week}-${day.day}`;
@@ -2490,7 +2521,7 @@ const App = {
     const weekly1RMVals = [];
     cycles.forEach(c => {
       if (!c.workouts) return;
-      PROGRAM.forEach(week => {
+      this.getCycleProgram(c).forEach(week => {
         let best1rm = 0;
         week.days.forEach(day => {
           const wKey = `${week.week}-${day.day}`;
@@ -2553,7 +2584,7 @@ const App = {
 
     // Circular progress + streak (cycle scope)
     if (isSingle) {
-      const totalDays = this.getTotalWorkouts();
+      const totalDays = this.getTotalWorkouts(currentCycle);
       const completedDays = this.getCompletedWorkouts(currentCycle);
       const percent = totalDays > 0 ? Math.round((completedDays / totalDays) * 100) : 0;
       const streak = this.getStreak(currentCycle);
@@ -2609,7 +2640,7 @@ const App = {
       const ranges = { heavy: { sets: 0, totalW: 0 }, strength: { sets: 0, totalW: 0 }, hypertrophy: { sets: 0, totalW: 0 }, endurance: { sets: 0, totalW: 0 } };
       cycles.forEach(c => {
         if (!c.workouts) return;
-        PROGRAM.forEach(week => {
+        this.getCycleProgram(c).forEach(week => {
           week.days.forEach(day => {
             const key = `${week.week}-${day.day}`;
             const wo = c.workouts[key];
@@ -2679,7 +2710,7 @@ const App = {
       const skippedList = [];
       cycles.forEach(c => {
         if (!c.workouts) return;
-        PROGRAM.forEach(week => {
+        this.getCycleProgram(c).forEach(week => {
           week.days.forEach(day => {
             const key = `${week.week}-${day.day}`;
             const wo = c.workouts[key];
@@ -2729,7 +2760,7 @@ const App = {
       html += '<div class="progress-section"><h3>Проходки</h3>';
       cycles.forEach(c => {
         const completed = this.getCompletedWorkouts(c);
-        const total = this.getTotalWorkouts();
+        const total = this.getTotalWorkouts(c);
         const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
         html += `<div class="progress-bar-container">
           <div class="progress-bar-label"><span>${this.escapeHtml(c.name)} <small style="color:var(--accent)">${c.maxWeight} кг</small></span><span>${pct}%</span></div>
@@ -2749,7 +2780,7 @@ const App = {
 
     if (isSingle) {
       const weeklyVolData = [], weeklyMaxData = [], weeklyCompData = [], weekly1RMData = [];
-      PROGRAM.forEach(week => {
+      this.getCycleProgram(currentCycle).forEach(week => {
         let vol = 0, mxW = 0, doneSets = 0, totalSetsW = 0, best1rm = 0;
         week.days.forEach(day => {
           const wKey = `${week.week}-${day.day}`;
@@ -2818,7 +2849,7 @@ const App = {
 
       // Week progress bars
       html += '<div class="progress-section"><h3>Прогресс по неделям</h3>';
-      PROGRAM.forEach(week => {
+      this.getCycleProgram(currentCycle).forEach(week => {
         const weekWorkouts = week.days.length;
         let weekCompleted = 0;
         week.days.forEach(day => {
@@ -3011,7 +3042,7 @@ const App = {
     cycles.forEach(cycle => {
       if (!cycle.workouts) return;
 
-      PROGRAM.forEach(week => {
+      this.getCycleProgram(cycle).forEach(week => {
         week.days.forEach(day => {
           const key = `${week.week}-${day.day}`;
           const workout = cycle.workouts[key];
@@ -3220,7 +3251,7 @@ const App = {
     let vol = 0;
     if (!cycle.workouts) return 0;
 
-    PROGRAM.forEach(week => {
+    this.getCycleProgram(cycle).forEach(week => {
       week.days.forEach(day => {
         const key = `${week.week}-${day.day}`;
         const workout = cycle.workouts[key];
