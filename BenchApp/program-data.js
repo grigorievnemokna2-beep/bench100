@@ -1197,7 +1197,8 @@ const PROGRAM = [
 // ВЕРСИИ ПРОГРАММЫ
 // ============================================================
 // Старые проходки продолжают использовать PROGRAM без изменений.
-// Новые проходки создаются на версии с бицепсовой специализацией.
+// Новые проходки создаются на версии со специализацией на бицепсе
+// и визуальной ширине плеч.
 const PROGRAM_VERSION_LEGACY = 1;
 const PROGRAM_VERSION_BICEPS = 2;
 const ACTIVE_PROGRAM_VERSION = PROGRAM_VERSION_BICEPS;
@@ -1274,6 +1275,49 @@ function buildBicepsProgram(baseProgram) {
       note: "Оставить 3-4 повтора в запасе, без отказа"
     });
   }
+
+  // Средняя дельта: заменяем разрозненные махи гантелями на системную
+  // работу одной рукой в кроссовере дважды в неделю. На восьмой неделе
+  // оставляем только лёгкую поддержку, на неделе проходки — ничего.
+  const lateralRaisePlan = {
+    1: { sets: 3, reps: 15, days: ["Пн", "Пт"] },
+    2: { sets: 3, reps: 15, days: ["Пн", "Пт"] },
+    3: { sets: 4, reps: 15, days: ["Пн", "Пт"] },
+    4: { sets: 4, reps: 15, days: ["Пн", "Пт"] },
+    5: { sets: 4, reps: 15, days: ["Пн", "Пт"] },
+    6: { sets: 4, reps: 15, days: ["Пн", "Пт"] },
+    7: { sets: 3, reps: 15, days: ["Пн", "Пт"] },
+    8: { sets: 2, reps: 15, days: ["Пн"], light: true }
+  };
+
+  Object.entries(lateralRaisePlan).forEach(([weekNumber, plan]) => {
+    const week = program.find(item => item.week === Number(weekNumber));
+    if (!week) return;
+
+    week.days.forEach(day => {
+      day.exercises = day.exercises.filter(ex =>
+        !/махи гантелей в сторону/i.test(ex.name)
+      );
+    });
+
+    plan.days.forEach(dayName => {
+      const day = week.days.find(item => item.day === dayName);
+      if (!day) return;
+
+      const armExerciseIndex = day.exercises.findIndex(ex => /бицепс/i.test(ex.name));
+      const insertIndex = armExerciseIndex >= 0 ? armExerciseIndex : day.exercises.length;
+      day.exercises.splice(insertIndex, 0, {
+        name: "Махи одной рукой в кроссовере в сторону",
+        isBase: false,
+        isIndividual: true,
+        reps: plan.reps,
+        sets: plan.sets,
+        note: plan.light
+          ? "На каждую руку. Легко, без раскачки, оставить 3-4 повтора в запасе"
+          : "На каждую руку. Вести локтем, не поднимать плечо к уху, оставить 1-2 повтора в запасе"
+      });
+    });
+  });
 
   return program;
 }

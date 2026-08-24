@@ -271,7 +271,7 @@ const App = {
 
     html += this.data.cycles.map(cycle => {
       const program = this.getCycleProgram(cycle);
-      const programLabel = Number(cycle.programVersion) >= PROGRAM_VERSION_BICEPS ? 'Бицепс v2' : 'Классическая';
+      const programLabel = Number(cycle.programVersion) >= PROGRAM_VERSION_BICEPS ? 'Бицепс + плечи v2' : 'Классическая';
       const totalWorkouts = this.getTotalWorkouts(cycle);
       const completedWorkouts = this.getCompletedWorkouts(cycle);
       const progressPercent = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
