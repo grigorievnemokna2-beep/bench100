@@ -44,6 +44,13 @@
       <label class="form-label">Название проходки</label>
       <input type="text" id="cycle-name" class="form-input" placeholder="Например: Первая проходка" value="Проходка">
 
+      <label class="form-label">Тип программы</label>
+      <select id="cycle-program" class="form-input" onchange="App.updateCycleProgramHint()">
+        <option value="3" selected>Троеборье: старт — 9 недель</option>
+        <option value="2">Жим + бицепс + плечи — 9 недель</option>
+      </select>
+      <p class="form-hint" id="cycle-program-hint">Жим остаётся приоритетом; присед и тяга осваиваются по RPE без расчёта от неизвестного максимума.</p>
+
       <label class="form-label">Твой максимум жима лежа (кг)</label>
       <input type="number" id="cycle-max" class="form-input big-input" placeholder="62.5" step="0.5" inputmode="decimal">
 
@@ -240,8 +247,8 @@
     <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH2LkpONgHBibXiGjo+KfG1hanWEjo2HemxiaHWFj46HemxiaHaFj46HemtkZnOCjI2IfG5kZ3OCjIyHfG5kZ3SCjIyHfG5kZ3SCjIyHfG5kZ3SDjY2IfG5kZ3SDjY2IfG5lZ3SDjY2IfG5lZ3WDjY2IfG5lZ3WEjY2IfG5lZ3WEjY6IfG5lZ3WEjo6JfW9mZ3WEjo6JfW9mZ3WEjo6JfW9maHaFjo6JfXBnaHaFj4+KfnFoaXeGj4+KfnFoaXeGkJCKf3JpaneHkJCLf3JpaneHkJCLgHNqaneHkZGLgHNqa3iIkZGLgHNqa3iIkZGMgXRra3iIkpKMgXRra3mJkpKMgXRrbHmJk5ONgnVsbHmJk5ONgnVsbHmKk5ONgnVsbHqKlJSOg3ZtbXqKlJSOg3ZtbXqLlJSOg3dtbXqLlZWPhHdubXuLlZWPhHdubXuLlZWPhHdubXuMlpaQhXhvbnuMlpaQhXhvbnuMlpaQhXhvb3yNl5eRhXlwb3yNl5eRhnlwb3yNl5eRhnpwcH2Ol5iShnpwcH2Ol5iShnpwcH2OmJiSh3txcH2OmJiTh3txcX6PmJmTh3txcX6PmZmTiHxxcX6PmZmUiHxxcX+QmZqUiH1ycX+QmpqUiH1ycn+QmpqUiX1ycn+RmpuViX5zcn+RmpuViX5zcn+Rm5uVin5zc4CSm5yWin50c4CSm5yWin50c4CSnJyWi390c4CSnJyXi390dIGTnJ2Xi4B0dIGTnJ2Xi4B0dIGTnZ2XjIB1dYGUnZ6YjIB1dYGUnZ6YjIF1dYKUnZ6YjIF1dYKVnp+ZjYF2doKVnp+ZjYF2doKVnp+ZjYJ2doKVn5+ZjYJ2doOWn6CajYJ3doOWn6CajoJ3d4OWoKCajoN3d4OXoKGbjoN3d4OXoKGbjoN4d4SXoKGbj4N4eISYoaKcj4R4eISYoaKcj4R4eISYoaKcj4R5eISZoqOdkIR5eIWZoqOdkIV5eYWZoqOdkIV5eYWZo6SdkIV5eYWao6SekIV6eYaao6SekYZ6eYaao6WekYZ6eoaao6WfkYZ6eoabpKWfkod6eoabpKafkod7eoabpKafkod7eoabpKafk4d7e4ecpaefk4d7e4ecpaefk4h7e4ecpaeflIh7e4ecpqiglIh8e4idpqiglIl8fIidpqiglIl8fIidp6mhlIl8fIidp6mhlIl8fImdp6mhlYl9fImdp6mhlYp9fImd" type="audio/wav">
   </audio>
 
-  <script src="program-data.js?v=41"></script>
-  <script src="app.js?v=41"></script>
+  <script src="program-data.js?v=42"></script>
+  <script src="app.js?v=42"></script>
   <script>
     // Регистрация Service Worker для офлайн-работы
     if ('serviceWorker' in navigator) {

@@ -271,7 +271,7 @@ const App = {
 
     html += this.data.cycles.map(cycle => {
       const program = this.getCycleProgram(cycle);
-      const programLabel = Number(cycle.programVersion) >= PROGRAM_VERSION_BICEPS ? 'Бицепс + плечи v2' : 'Классическая';
+      const programLabel = getProgramLabelByVersion(cycle.programVersion);
       const totalWorkouts = this.getTotalWorkouts(cycle);
       const completedWorkouts = this.getCompletedWorkouts(cycle);
       const progressPercent = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
@@ -295,13 +295,13 @@ const App = {
           <div class="cycle-card" data-cycle-id="${cycle.id}" onclick="App.openCycle('${cycle.id}')">
             <h3>${this.escapeHtml(cycle.name)}</h3>
             <div class="cycle-meta">
-              <span class="cycle-max">Макс: ${cycle.maxWeight} кг</span>
+              <span class="cycle-max">Жим: ${cycle.maxWeight} кг</span>
               &nbsp;&middot;&nbsp;
               <span>${completedWorkouts}/${totalWorkouts} тренировок</span>
               &nbsp;&middot;&nbsp;
               <span>${progressPercent}%</span>
               &nbsp;&middot;&nbsp;
-              <span>Неделя ${currentWeek} из 9</span>
+              <span>Неделя ${currentWeek} из ${program.length}</span>
               &nbsp;&middot;&nbsp;
               <span>${programLabel}</span>
             </div>
@@ -376,6 +376,9 @@ const App = {
   showAddCycle() {
     this.showScreen('add-cycle');
     document.getElementById('cycle-name').value = `Проходка ${this.data.cycles.length + 1}`;
+    const programSelect = document.getElementById('cycle-program');
+    if (programSelect) programSelect.value = String(PROGRAM_VERSION_POWERLIFTING);
+    this.updateCycleProgramHint();
     // Auto-suggest max from last cycle
     const hint = document.getElementById('cycle-max-hint');
     if (this.data.cycles.length > 0) {
@@ -389,9 +392,22 @@ const App = {
     document.getElementById('cycle-max').focus();
   },
 
+  updateCycleProgramHint() {
+    const select = document.getElementById('cycle-program');
+    const hint = document.getElementById('cycle-program-hint');
+    if (!select || !hint) return;
+    hint.textContent = Number(select.value) === PROGRAM_VERSION_POWERLIFTING
+      ? 'Жим остаётся приоритетом; присед и тяга осваиваются по RPE без расчёта от неизвестного максимума.'
+      : 'Текущая жимовая программа со специализацией на бицепсе и ширине плеч.';
+  },
+
   createCycle() {
     const name = document.getElementById('cycle-name').value.trim() || 'Проходка';
     const maxWeight = parseFloat(document.getElementById('cycle-max').value);
+    const selectedProgram = Number(document.getElementById('cycle-program').value);
+    const programVersion = [PROGRAM_VERSION_BICEPS, PROGRAM_VERSION_POWERLIFTING].includes(selectedProgram)
+      ? selectedProgram
+      : ACTIVE_PROGRAM_VERSION;
 
     if (!maxWeight || maxWeight <= 0) {
       this.showToast('Укажи свой максимум в жиме лёжа!');
@@ -402,7 +418,7 @@ const App = {
       id: Date.now().toString(),
       name: name,
       maxWeight: maxWeight,
-      programVersion: ACTIVE_PROGRAM_VERSION,
+      programVersion: programVersion,
       createdAt: new Date().toISOString(),
       workouts: {}
     };
@@ -468,7 +484,7 @@ const App = {
     if (!cycle) return;
 
     document.getElementById('weeks-title').textContent = cycle.name;
-    document.getElementById('max-badge').textContent = `Макс: ${cycle.maxWeight} кг`;
+    document.getElementById('max-badge').textContent = `Жим: ${cycle.maxWeight} кг`;
     document.getElementById('bar-badge').textContent = `Гриф: ${this.data.barWeight || 20} кг`;
     this.renderWeeks();
   },
