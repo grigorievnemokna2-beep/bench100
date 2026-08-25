@@ -2,13 +2,13 @@
 // Service Worker — кэширует файлы для работы офлайн
 // ============================================================
 
-const CACHE_NAME = 'bench100-v42';
+const CACHE_NAME = 'bench100-v43';
 const URLS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
-  './style.css?v=39',
-  './app.js?v=42',
+  './style.css?v=40',
+  './app.js?v=43',
   './program-data.js?v=42',
   './manifest.json',
   './icon-192.png',

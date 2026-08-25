@@ -1817,39 +1817,42 @@ const App = {
 
   // ==================== СВАЙПЫ И НАВИГАЦИЯ ====================
   initSwipeGestures() {
-    let startX = 0, startY = 0, swiping = null;
+    let startX = 0, startY = 0, swipeTarget = null;
     document.addEventListener('touchstart', e => {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
-      swiping = null;
-    }, { passive: true });
-
-    document.addEventListener('touchmove', e => {
-      const dx = e.touches[0].clientX - startX;
-      const dy = e.touches[0].clientY - startY;
-      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 20) {
-        swiping = dx > 0 ? 'right' : 'left';
-      } else {
-        swiping = null;
-      }
+      swipeTarget = e.target;
     }, { passive: true });
 
     document.addEventListener('touchend', e => {
-      if (!swiping) return;
       const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      const isHorizontalSwipe = Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.25;
+      if (!isHorizontalSwipe) {
+        swipeTarget = null;
+        return;
+      }
+      const direction = dx > 0 ? 'right' : 'left';
+
       // Swipe on day screen → navigate between days
-      if (document.getElementById('screen-day').classList.contains('active') && Math.abs(dx) > 80) {
-        if (swiping === 'left') this.nextDay();
+      if (document.getElementById('screen-day').classList.contains('active')) {
+        if (direction === 'left') this.nextDay();
         else this.prevDay();
       }
       // Swipe on cycle card → reveal delete
-      const card = e.target.closest('.cycle-card');
-      if (card && swiping === 'left' && Math.abs(dx) > 80) {
+      const card = swipeTarget && swipeTarget.closest
+        ? swipeTarget.closest('.cycle-card')
+        : null;
+      if (card && direction === 'left') {
         card.style.transform = 'translateX(-80px)';
         setTimeout(() => { card.style.transform = ''; }, 3000);
       }
-      swiping = null;
-    });
+      swipeTarget = null;
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', () => {
+      swipeTarget = null;
+    }, { passive: true });
   },
 
   _getDaysList() {

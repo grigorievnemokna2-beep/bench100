@@ -533,6 +533,7 @@ body {
   font-family: 'Oswald', sans-serif;
   font-size: 14px;
   font-weight: 500;
+  padding-right: 40px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   margin-bottom: 3px;
@@ -2732,3 +2733,66 @@ body {
 }
 
 /* duplicate blocks removed — styles defined above */
+
+/* ============ MOBILE SCROLL PERFORMANCE ============ */
+/* На сенсорном экране вертикальная прокрутка важнее декоративных
+   трансформаций. Убираем перерисовки, из-за которых карточки визуально
+   прыгали под пальцем, и отдаём вертикальный жест нативному скроллу. */
+@media (max-width: 768px), (hover: none), (pointer: coarse) {
+  .screen,
+  .screen.active {
+    height: 100%;
+    min-height: 0;
+    animation: none;
+    transform: none;
+  }
+
+  .content {
+    min-height: 0;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+    scroll-behavior: auto;
+  }
+
+  .header,
+  .timer-section,
+  .modal,
+  .timer-floating {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .cycle-card,
+  .cycle-card-wrapper .cycle-card,
+  .week-card,
+  .day-chip,
+  .exercise-card,
+  .btn-continue {
+    transition: none;
+  }
+
+  .cycle-card:active,
+  .week-card:active,
+  .day-chip:active,
+  .exercise-card:active,
+  .btn-continue:active {
+    transform: none;
+  }
+
+  .day-chip.today,
+  .timer-display.warning,
+  .timer-display.done,
+  .timer-floating.timer-done {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen.active,
+  .day-chip.today,
+  .timer-display.warning,
+  .timer-display.done,
+  .timer-floating.timer-done {
+    animation: none;
+  }
+}
