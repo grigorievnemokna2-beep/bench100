@@ -397,7 +397,7 @@ const App = {
     const hint = document.getElementById('cycle-program-hint');
     if (!select || !hint) return;
     hint.textContent = Number(select.value) === PROGRAM_VERSION_POWERLIFTING
-      ? 'Жим остаётся приоритетом; присед и тяга осваиваются по RPE без расчёта от неизвестного максимума.'
+      ? 'Основной жим без изменений; присед один раз во вторник, тяга один раз в четверг. Воскресенье — без ног.'
       : 'Текущая жимовая программа со специализацией на бицепсе и ширине плеч.';
   },
 

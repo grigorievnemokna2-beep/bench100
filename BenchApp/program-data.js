@@ -1325,14 +1325,14 @@ function buildBicepsProgram(baseProgram) {
 
 const PROGRAM_BICEPS = buildBicepsProgram(PROGRAM);
 
-// Отдельная стартовая проходка по троеборью. Жимовая основа версии 2
-// сохраняется, а старая подсобка для ног заменяется обучающим приседом
-// и становой по RPE: у новичка в этих движениях ещё нет надёжного 1ПМ,
-// поэтому проценты от жимового максимума здесь использовать нельзя.
+// Жимовая проходка с минимальной технической базой троеборья. Основная
+// процентная работа жима версии 2 сохраняется без изменений, а старая
+// подсобка для ног заменяется одним приседом и одной становой в неделю.
+// У новичка в этих движениях ещё нет надёжного 1ПМ, поэтому используем RPE.
 function buildPowerliftingProgram(baseProgram) {
   const program = JSON.parse(JSON.stringify(baseProgram));
   const titles = {
-    1: "Троеборье: техника",
+    1: "Жим 100 + техника",
     2: "Закрепляем движения",
     3: "Наращиваем объём",
     4: "Рабочая база",
@@ -1340,31 +1340,29 @@ function buildPowerliftingProgram(baseProgram) {
     6: "Сила и техника",
     7: "Подводка",
     8: "Снижение нагрузки",
-    9: "Контрольные подходы"
+    9: "Проходка жима"
   };
   const lowerPlan = {
-    1: { squat: [3, 5, "RPE 5-6"], squat2: [3, 5, "RPE 5"], deadlift: [3, 3, "RPE 5-6"] },
-    2: { squat: [3, 5, "RPE 6"], squat2: [3, 4, "RPE 5-6"], deadlift: [3, 3, "RPE 6"] },
-    3: { squat: [4, 5, "RPE 6"], squat2: [3, 4, "RPE 6"], deadlift: [4, 3, "RPE 6"] },
-    4: { squat: [4, 4, "RPE 6-7"], squat2: [2, 4, "RPE 5-6"], deadlift: [4, 3, "RPE 6-7"] },
-    5: { squat: [4, 4, "RPE 7"], squat2: [3, 3, "RPE 6"], deadlift: [4, 3, "RPE 7"] },
-    6: { squat: [4, 3, "RPE 7"], squat2: [2, 3, "RPE 6"], deadlift: [4, 2, "RPE 7"] },
-    7: { squat: [3, 3, "RPE 6-7"], squat2: [2, 3, "RPE 5"], deadlift: [3, 2, "RPE 6-7"] },
+    1: { squat: [3, 5, "RPE 5-6"], deadlift: [3, 3, "RPE 5-6"] },
+    2: { squat: [3, 5, "RPE 6"], deadlift: [3, 3, "RPE 6"] },
+    3: { squat: [4, 5, "RPE 6"], deadlift: [4, 3, "RPE 6"] },
+    4: { squat: [4, 4, "RPE 6-7"], deadlift: [4, 3, "RPE 6-7"] },
+    5: { squat: [4, 4, "RPE 7"], deadlift: [4, 3, "RPE 7"] },
+    6: { squat: [4, 3, "RPE 7"], deadlift: [4, 2, "RPE 7"] },
+    7: { squat: [3, 3, "RPE 6-7"], deadlift: [3, 2, "RPE 6-7"] },
     8: { squat: [2, 3, "RPE 5-6"], deadlift: [2, 2, "RPE 5-6"] }
   };
 
   const oldLowerBody = /разгибание бедра|приседания (с гирей|без веса)|гиперэкстензия/i;
   const removableAccessory = /разводка гантелей|сгибание кисти|^пресс$|прощание с залом|медитация в зале/i;
 
-  const makeSquat = (plan, secondary = false) => ({
-    name: secondary ? "Присед со штангой с паузой 1 сек" : "Присед со штангой (соревновательная техника)",
+  const makeSquat = plan => ({
+    name: "Присед со штангой (соревновательная техника)",
     isBase: true,
     isIndividual: true,
     sets: plan[0],
     reps: plan[1],
-    note: secondary
-      ? `${plan[2]}. Пауза внизу без расслабления, одинаковая глубина, 3-5 повторов в запасе`
-      : `${plan[2]}. Складка таза ниже верха колена, одинаковая техника во всех повторах. Добавлять 2,5-5 кг только без боли и потери глубины`
+    note: `${plan[2]}. Складка таза ниже верха колена, одинаковая техника во всех повторах. Добавлять 2,5-5 кг только без боли и потери глубины`
   });
 
   const makeDeadlift = plan => ({
@@ -1477,39 +1475,14 @@ function buildPowerliftingProgram(baseProgram) {
 
     if (firstDay) firstDay.exercises.splice(1, 0, makeSquat(plan.squat));
     if (middleDay) middleDay.exercises.unshift(makeDeadlift(plan.deadlift));
-    if (thirdDay && plan.squat2) thirdDay.exercises.splice(1, 0, makeSquat(plan.squat2, true));
   });
 
-  // Последняя неделя: жим остаётся главным максимумом. Присед и тяга —
-  // только технические одиночные до RPE 8, без отказа и второго гриндера.
+  // До достижения 100 кг не проверяем максимум приседа и тяги. Последняя
+  // неделя полностью принадлежит проходке основного жима.
   const testWeek = program.find(item => item.week === 9);
   if (testWeek) {
     const benchTest = testWeek.days.find(day => day.day === "Пн");
-    testWeek.days = [
-      benchTest,
-      {
-        day: "Ср",
-        exercises: [{
-          name: "Присед со штангой — технический максимум",
-          isBase: true,
-          isIndividual: true,
-          reps: 1,
-          sets: 5,
-          note: "Не абсолютный максимум: 3 разминочных одиночных + до 2 зачётных. Остановиться на RPE 8, если глубина или техника ухудшились — попытку не повышать"
-        }]
-      },
-      {
-        day: "Пт",
-        exercises: [{
-          name: "Становая тяга — технический максимум",
-          isBase: true,
-          isIndividual: true,
-          reps: 1,
-          sets: 5,
-          note: "Не абсолютный максимум: 3 разминочных одиночных + до 2 зачётных. Остановиться на RPE 8, без дожима весом и потери стартовой позиции"
-        }]
-      }
-    ].filter(Boolean);
+    testWeek.days = [benchTest].filter(Boolean);
   }
 
   return program;
@@ -1526,7 +1499,7 @@ function getProgramByVersion(version) {
 
 function getProgramLabelByVersion(version) {
   const numericVersion = Number(version);
-  if (numericVersion === PROGRAM_VERSION_POWERLIFTING) return "Троеборье: старт";
+  if (numericVersion === PROGRAM_VERSION_POWERLIFTING) return "Жим 100 + база";
   if (numericVersion >= PROGRAM_VERSION_BICEPS) return "Бицепс + плечи v2";
   return "Классическая";
 }
