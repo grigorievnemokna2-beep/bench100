@@ -1470,7 +1470,19 @@ function buildPowerliftingProgram(baseProgram, compact = false) {
     }
 
     if (firstDay) firstDay.exercises.splice(1, 0, makeSquat(plan.squat));
-    if (middleDay) middleDay.exercises.unshift(makeDeadlift(plan.deadlift));
+    if (middleDay) {
+      middleDay.exercises.unshift(makeDeadlift(plan.deadlift));
+      if (!compact && week.week <= 7) {
+        middleDay.exercises.push({
+          name: "Сгибание рук на бицепс в нижнем блоке (лёгко)",
+          isBase: false,
+          isIndividual: true,
+          reps: week.week <= 2 ? 15 : 12,
+          sets: 2,
+          note: "Спокойный темп, локти неподвижны, оставить 2-3 повтора в запасе"
+        });
+      }
+    }
   });
 
   // До достижения 100 кг не проверяем максимум приседа и тяги. Последняя
