@@ -116,6 +116,62 @@ const App = {
       });
       if (repaired) this.saveData();
     }
+
+    let programRepaired = false;
+    if (this.data.cycles) {
+      this.data.cycles.forEach(cycle => {
+        if (Number(cycle.programVersion) !== PROGRAM_VERSION_POWERLIFTING || cycle.programRevision) return;
+        this.migratePowerliftingWorkoutIndexes(cycle);
+        cycle.programRevision = PROGRAM_REVISION_POWERLIFTING_FULL;
+        programRepaired = true;
+      });
+    }
+    if (this.data.version < 3) {
+      this.data.version = 3;
+      programRepaired = true;
+    }
+    if (programRepaired) this.saveData();
+  },
+
+  migratePowerliftingWorkoutIndexes(cycle) {
+    const remapIndex = (weekNumber, dayName, oldIndex) => {
+      const oldWeek = PROGRAM_POWERLIFTING_COMPACT.find(week => week.week === weekNumber);
+      const newWeek = PROGRAM_POWERLIFTING.find(week => week.week === weekNumber);
+      const oldDay = oldWeek && oldWeek.days.find(day => day.day === dayName);
+      const newDay = newWeek && newWeek.days.find(day => day.day === dayName);
+      const oldExercise = oldDay && oldDay.exercises[Number(oldIndex)];
+      if (!oldExercise || !newDay) return -1;
+      return newDay.exercises.findIndex(exercise => exercise.name === oldExercise.name);
+    };
+
+    Object.entries(cycle.workouts || {}).forEach(([workoutKey, workout]) => {
+      const match = workoutKey.match(/^(\d+)-(.+)$/);
+      if (!match || !workout.exercises) return;
+      const weekNumber = Number(match[1]);
+      const dayName = match[2];
+      const remapped = {};
+      Object.entries(workout.exercises).forEach(([oldIndex, exerciseData]) => {
+        const newIndex = remapIndex(weekNumber, dayName, oldIndex);
+        if (newIndex >= 0) remapped[newIndex] = exerciseData;
+      });
+      workout.exercises = remapped;
+    });
+
+    if (cycle.customNames) {
+      const remappedNames = {};
+      Object.entries(cycle.customNames).forEach(([key, value]) => {
+        const match = key.match(/^(\d+)-(.+)-(\d+)$/);
+        if (!match) {
+          remappedNames[key] = value;
+          return;
+        }
+        const weekNumber = Number(match[1]);
+        const dayName = match[2];
+        const newIndex = remapIndex(weekNumber, dayName, match[3]);
+        if (newIndex >= 0) remappedNames[`${weekNumber}-${dayName}-${newIndex}`] = value;
+      });
+      cycle.customNames = remappedNames;
+    }
   },
 
   // Сохранение данных в localStorage
@@ -397,7 +453,7 @@ const App = {
     const hint = document.getElementById('cycle-program-hint');
     if (!select || !hint) return;
     hint.textContent = Number(select.value) === PROGRAM_VERSION_POWERLIFTING
-      ? 'Основной жим без изменений; присед один раз во вторник, тяга один раз в четверг. Воскресенье — без ног.'
+      ? 'Вся старая работа верха сохранена; прежние упражнения на ноги заменены приседом во вторник и тягой в четверг. Воскресенье — без ног.'
       : 'Текущая жимовая программа со специализацией на бицепсе и ширине плеч.';
   },
 
@@ -419,6 +475,9 @@ const App = {
       name: name,
       maxWeight: maxWeight,
       programVersion: programVersion,
+      programRevision: programVersion === PROGRAM_VERSION_POWERLIFTING
+        ? PROGRAM_REVISION_POWERLIFTING_FULL
+        : 1,
       createdAt: new Date().toISOString(),
       workouts: {}
     };

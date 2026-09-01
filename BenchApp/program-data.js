@@ -1202,6 +1202,7 @@ const PROGRAM = [
 const PROGRAM_VERSION_LEGACY = 1;
 const PROGRAM_VERSION_BICEPS = 2;
 const PROGRAM_VERSION_POWERLIFTING = 3;
+const PROGRAM_REVISION_POWERLIFTING_FULL = 2;
 const ACTIVE_PROGRAM_VERSION = PROGRAM_VERSION_POWERLIFTING;
 
 function buildBicepsProgram(baseProgram) {
@@ -1325,11 +1326,11 @@ function buildBicepsProgram(baseProgram) {
 
 const PROGRAM_BICEPS = buildBicepsProgram(PROGRAM);
 
-// Жимовая проходка с минимальной технической базой троеборья. Основная
-// процентная работа жима версии 2 сохраняется без изменений, а старая
-// подсобка для ног заменяется одним приседом и одной становой в неделю.
-// У новичка в этих движениях ещё нет надёжного 1ПМ, поэтому используем RPE.
-function buildPowerliftingProgram(baseProgram) {
+// Жимовая проходка с техническим приседом и становой. Вся жимовая и верхняя
+// подсобка версии 2 сохраняется без изменений; заменяются только прежние
+// упражнения на ноги. Compact-режим воспроизводит предыдущую редакцию и
+// нужен исключительно для безопасной миграции уже записанных тренировок.
+function buildPowerliftingProgram(baseProgram, compact = false) {
   const program = JSON.parse(JSON.stringify(baseProgram));
   const titles = {
     1: "Жим 100 + техника",
@@ -1353,7 +1354,8 @@ function buildPowerliftingProgram(baseProgram) {
     8: { squat: [2, 3, "RPE 5-6"], deadlift: [2, 2, "RPE 5-6"] }
   };
 
-  const oldLowerBody = /разгибание бедра|приседания (с гирей|без веса)|гиперэкстензия/i;
+  const oldLegAccessory = /разгибание бедра|приседания (с гирей|без веса)/i;
+  const compactLowerBody = /разгибание бедра|приседания (с гирей|без веса)|гиперэкстензия/i;
   const removableAccessory = /разводка гантелей|сгибание кисти|^пресс$|прощание с залом|медитация в зале/i;
 
   const makeSquat = plan => ({
@@ -1390,8 +1392,9 @@ function buildPowerliftingProgram(baseProgram) {
     if (week.week === 9) return;
 
     week.days.forEach(day => {
+      const lowerPattern = compact ? compactLowerBody : oldLegAccessory;
       day.exercises = day.exercises.filter(ex =>
-        !oldLowerBody.test(ex.name) && !removableAccessory.test(ex.name)
+        !lowerPattern.test(ex.name) && (!compact || !removableAccessory.test(ex.name))
       );
     });
 
@@ -1401,76 +1404,69 @@ function buildPowerliftingProgram(baseProgram) {
     const plan = lowerPlan[week.week];
     if (!plan) return;
 
-    // На 7-й неделе убираем лишнюю жимовую подсобку перед подводкой.
-    if (week.week === 7 && firstDay) {
-      firstDay.exercises = firstDay.exercises.filter(ex =>
-        !/жим гантелей лежа на скамье 30|разгибания на трицепс/i.test(ex.name)
-      );
-    }
-    if ([4, 6].includes(week.week) && firstDay) {
-      firstDay.exercises = firstDay.exercises.filter(ex =>
-        !/^жим гантелей лежа$/i.test(ex.name)
-      );
-    }
-    if (week.week === 5 && firstDay) {
-      firstDay.exercises = firstDay.exercises.filter(ex =>
-        !/отжимания узким хватом/i.test(ex.name)
-      );
-    }
+    if (compact) {
+      if (week.week === 7 && firstDay) {
+        firstDay.exercises = firstDay.exercises.filter(ex =>
+          !/жим гантелей лежа на скамье 30|разгибания на трицепс/i.test(ex.name)
+        );
+      }
+      if ([4, 6].includes(week.week) && firstDay) {
+        firstDay.exercises = firstDay.exercises.filter(ex =>
+          !/^жим гантелей лежа$/i.test(ex.name)
+        );
+      }
+      if (week.week === 5 && firstDay) {
+        firstDay.exercises = firstDay.exercises.filter(ex =>
+          !/отжимания узким хватом/i.test(ex.name)
+        );
+      }
+      if (middleDay && week.week === 3) {
+        middleDay.exercises = middleDay.exercises.filter(ex =>
+          !/жим гантелей сидя/i.test(ex.name)
+        );
+      }
+      if (middleDay && week.week === 5) {
+        middleDay.exercises = middleDay.exercises.filter(ex =>
+          !/жим штанги стоя/i.test(ex.name)
+        );
+      }
+      if (thirdDay) {
+        thirdDay.exercises = thirdDay.exercises.filter(ex =>
+          !/жим штанги сидя/i.test(ex.name)
+        );
+      }
 
-    // В средней тренировке оставляем одну жимовую вариацию и одну тягу
-    // на спину, чтобы становая не накладывалась на прежний объём подсобки.
-    if (middleDay && week.week === 3) {
-      middleDay.exercises = middleDay.exercises.filter(ex =>
-        !/жим гантелей сидя/i.test(ex.name)
-      );
-    }
-    if (middleDay && week.week === 5) {
-      middleDay.exercises = middleDay.exercises.filter(ex =>
-        !/жим штанги стоя/i.test(ex.name)
-      );
-    }
-
-    // Вертикальный жим в третьей тренировке первой недели дублирует
-    // уже большой жимовой объём и мешает освоению приседа.
-    if (thirdDay) {
-      thirdDay.exercises = thirdDay.exercises.filter(ex =>
-        !/жим штанги сидя/i.test(ex.name)
-      );
-    }
-
-    // Сокращаем только вторичную жимовую и тяговую подсобку. Основная
-    // процентная работа жима остаётся такой же, как в проверенной проходке.
-    if (week.week === 1) {
-      setExerciseSets(firstDay, /жим штанги узким хватом/i, 3);
-      setExerciseSets(middleDay, /отжимания на брусьях/i, 3);
-      setExerciseSets(middleDay, /вертикальная тяга блока/i, 3);
-    }
-    if (week.week === 2) {
-      setExerciseSets(middleDay, /разгибания на трицепс/i, 3);
-      setExerciseSets(middleDay, /горизонтальная тяга блока/i, 4);
-      setExerciseSets(thirdDay, /жим штанги лежа широким хватом/i, 3);
-    }
-    if (week.week === 3) {
-      setExerciseSets(firstDay, /жим штанги лежа средним хватом/i, 3);
-      setExerciseSets(thirdDay, /отжимания на брусьях/i, 3);
-    }
-    if (week.week === 5) {
-      setExerciseSets(middleDay, /жим гантелей на скамье 30/i, 4);
-      setExerciseSets(middleDay, /вертикальная тяга блока/i, 4);
-      setExerciseSets(thirdDay, /жим штанги узким хватом/i, 3);
-    }
-    if (week.week === 6) {
-      setExerciseSets(middleDay, /жим гантелей сидя/i, 3);
-      setExerciseSets(middleDay, /вертикальная тяга блока/i, 4);
-    }
-    if (week.week === 7) {
-      setExerciseSets(middleDay, /вертикальная тяга блока/i, 3);
-      setExerciseSets(thirdDay, /жим штанги узким хватом/i, 3);
-    }
-    if (week.week === 8) {
-      setExerciseSets(firstDay, /разгибания на трицепс/i, 3);
-      setExerciseSets(middleDay, /вертикальная тяга блока/i, 3);
+      if (week.week === 1) {
+        setExerciseSets(firstDay, /жим штанги узким хватом/i, 3);
+        setExerciseSets(middleDay, /отжимания на брусьях/i, 3);
+        setExerciseSets(middleDay, /вертикальная тяга блока/i, 3);
+      }
+      if (week.week === 2) {
+        setExerciseSets(middleDay, /разгибания на трицепс/i, 3);
+        setExerciseSets(middleDay, /горизонтальная тяга блока/i, 4);
+        setExerciseSets(thirdDay, /жим штанги лежа широким хватом/i, 3);
+      }
+      if (week.week === 3) {
+        setExerciseSets(firstDay, /жим штанги лежа средним хватом/i, 3);
+        setExerciseSets(thirdDay, /отжимания на брусьях/i, 3);
+      }
+      if (week.week === 5) {
+        setExerciseSets(middleDay, /жим гантелей на скамье 30/i, 4);
+        setExerciseSets(middleDay, /вертикальная тяга блока/i, 4);
+        setExerciseSets(thirdDay, /жим штанги узким хватом/i, 3);
+      }
+      if (week.week === 6) {
+        setExerciseSets(middleDay, /жим гантелей сидя/i, 3);
+        setExerciseSets(middleDay, /вертикальная тяга блока/i, 4);
+      }
+      if (week.week === 7) {
+        setExerciseSets(middleDay, /вертикальная тяга блока/i, 3);
+        setExerciseSets(thirdDay, /жим штанги узким хватом/i, 3);
+      }
+      if (week.week === 8) {
+        setExerciseSets(firstDay, /разгибания на трицепс/i, 3);
+        setExerciseSets(middleDay, /вертикальная тяга блока/i, 3);
+      }
     }
 
     if (firstDay) firstDay.exercises.splice(1, 0, makeSquat(plan.squat));
@@ -1488,6 +1484,7 @@ function buildPowerliftingProgram(baseProgram) {
   return program;
 }
 
+const PROGRAM_POWERLIFTING_COMPACT = buildPowerliftingProgram(PROGRAM_BICEPS, true);
 const PROGRAM_POWERLIFTING = buildPowerliftingProgram(PROGRAM_BICEPS);
 
 function getProgramByVersion(version) {
