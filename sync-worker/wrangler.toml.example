@@ -1,0 +1,8 @@
+name = "bench100-sync"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+[[kv_namespaces]]
+binding = "SYNC"
+id = "PASTE_PRODUCTION_KV_NAMESPACE_ID_HERE"
+preview_id = "PASTE_PREVIEW_KV_NAMESPACE_ID_HERE"

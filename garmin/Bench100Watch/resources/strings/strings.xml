@@ -1,0 +1,7 @@
+<strings>
+    <string id="AppName">Bench 100</string>
+    <string id="ApiUrlTitle">Адрес Bench 100 Sync</string>
+    <string id="ApiUrlPrompt">Например: https://bench100-sync.example.workers.dev/api/v1</string>
+    <string id="PairCodeTitle">Код привязки</string>
+    <string id="PairCodePrompt">Шесть цифр из настроек Bench 100</string>
+</strings>

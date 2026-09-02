@@ -34,6 +34,7 @@ const App = {
 
   init() {
     this.loadData();
+    GarminSync.init(this);
     this.showCycles();
     this.initModalKeys();
     this.initSwipeGestures();
@@ -178,6 +179,7 @@ const App = {
   saveData() {
     try {
       localStorage.setItem('bench100_data', JSON.stringify(this.data));
+      if (typeof GarminSync !== 'undefined') GarminSync.onAppDataChanged();
     } catch (e) {
       this.showToast('Ошибка сохранения! Освободи память.');
     }
@@ -738,6 +740,10 @@ const App = {
 
     let html = '';
 
+    if (typeof GarminSync !== 'undefined') {
+      html += GarminSync.renderDaySyncCard();
+    }
+
     // Workout start/end controls
     if (isActive) {
       html += `<div class="day-summary">
@@ -753,6 +759,7 @@ const App = {
       const durMin = Math.round((endMs - startMs) / 60000);
       const dayLabel = workout.realDay ? ` (${this.escapeHtml(workout.realDay)})` : '';
       html += `<div class="workout-finished-badge">Тренировка завершена${dayLabel} — ${durMin} мин</div>`;
+      if (typeof GarminSync !== 'undefined') html += GarminSync.renderWorkoutGarminSummary(workout);
       html += `<button class="btn-reset-workout" onclick="App.resetWorkout()">Сбросить и пройти заново</button>`;
     } else {
       html += `<div class="day-summary">
@@ -2007,6 +2014,7 @@ const App = {
     const weightStep = this.data.weightStep || 0.5;
 
     container.innerHTML = `
+      ${typeof GarminSync !== 'undefined' ? GarminSync.renderSettingsCard() : ''}
       <div class="settings-section">
         <div class="settings-label">Дни тренировок</div>
         <div class="settings-hint">Выбери 3 дня, в которые тренируешься</div>

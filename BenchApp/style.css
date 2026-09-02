@@ -2734,6 +2734,207 @@ body {
 
 /* duplicate blocks removed — styles defined above */
 
+/* ============ GARMIN CONNECT IQ ============ */
+.garmin-settings {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(17, 169, 237, 0.2);
+  background:
+    radial-gradient(circle at 92% 0%, rgba(17, 169, 237, 0.14), transparent 38%),
+    var(--surface);
+}
+.garmin-heading,
+.garmin-heading > div,
+.garmin-device,
+.garmin-day-card,
+.garmin-workout-summary {
+  display: flex;
+  align-items: center;
+}
+.garmin-heading {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.garmin-heading > div { gap: 10px; }
+.garmin-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  background: #11a9ed;
+  box-shadow: 0 0 18px rgba(17, 169, 237, 0.25);
+}
+.garmin-state {
+  padding: 4px 8px;
+  border-radius: var(--r-pill);
+  color: var(--t3);
+  background: var(--surface2);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+.garmin-state.on { color: #0a0a0a; background: var(--accent); }
+.garmin-device {
+  gap: 10px;
+  padding: 11px 12px;
+  margin-bottom: 12px;
+  border-radius: var(--r-md);
+  background: rgba(255,255,255,0.035);
+  border: 1px solid var(--line);
+}
+.garmin-device div { display: flex; flex-direction: column; min-width: 0; }
+.garmin-device strong { font-size: 13px; color: var(--t1); }
+.garmin-device small { color: var(--t3); font-size: 10px; margin-top: 1px; }
+.garmin-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #555;
+}
+.garmin-device.connected .garmin-dot {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.garmin-field-label {
+  display: block;
+  margin: 3px 0 6px;
+  color: var(--t3);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.garmin-main-btn { width: 100%; margin-top: 10px; }
+.garmin-error {
+  padding: 9px 11px;
+  margin-bottom: 10px;
+  color: #ff9f9b;
+  background: rgba(255,59,48,.09);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+}
+.garmin-pair-code {
+  width: 100%;
+  border: 1px dashed rgba(205,255,0,.35);
+  border-radius: var(--r-md);
+  background: var(--accent-subtle);
+  color: var(--t1);
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+}
+.garmin-pair-code span,
+.garmin-pair-code small { display: block; color: var(--t3); font-size: 9px; }
+.garmin-pair-code strong {
+  display: block;
+  margin: 1px 0;
+  color: var(--accent);
+  font-family: 'Oswald', sans-serif;
+  font-size: 31px;
+  letter-spacing: .18em;
+  line-height: 1.25;
+}
+.garmin-readiness {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: var(--r-md);
+  background: var(--bg2);
+}
+.garmin-readiness > div { text-align: center; }
+.garmin-readiness small { display: block; color: var(--t3); font-size: 8px; }
+.garmin-readiness strong { display: block; margin-top: 2px; font: 600 21px/1 'Oswald', sans-serif; }
+.garmin-readiness > span {
+  grid-column: 1 / -1;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  color: var(--t2);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.garmin-readiness.good strong:first-of-type { color: var(--accent); }
+.garmin-readiness.medium strong:first-of-type { color: #ffd60a; }
+.garmin-readiness.low strong:first-of-type { color: #ff453a; }
+.garmin-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.garmin-actions .btn-secondary { margin: 0; padding: 11px 8px; font-size: 11px; }
+.garmin-disconnect {
+  display: block;
+  margin: 12px auto 0;
+  border: 0;
+  background: transparent;
+  color: var(--t3);
+  font-size: 10px;
+  cursor: pointer;
+}
+.garmin-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  color: #fff;
+  background: rgba(8,8,8,.88);
+  font-size: 12px;
+  font-weight: 700;
+}
+.garmin-busy.hidden { display: none; }
+.garmin-day-card {
+  width: 100%;
+  gap: 10px;
+  min-height: 64px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: var(--r-lg);
+  border: 1px solid rgba(17,169,237,.2);
+  background: linear-gradient(100deg, rgba(17,169,237,.1), rgba(255,255,255,.025));
+  color: var(--t1);
+  text-align: left;
+}
+.garmin-day-card.published { border-color: rgba(205,255,0,.2); }
+.garmin-day-card.muted { cursor: pointer; }
+.garmin-day-card > span:nth-child(2) { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.garmin-day-card strong { font-size: 12px; }
+.garmin-day-card small { margin-top: 2px; color: var(--t3); font-size: 9px; }
+.garmin-day-card > button {
+  border: 0;
+  border-radius: var(--r-pill);
+  padding: 8px 10px;
+  color: #050505;
+  background: var(--accent);
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.garmin-day-card > b { color: var(--t3); font-size: 22px; }
+.garmin-workout-summary {
+  gap: 9px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: var(--r-md);
+  background: rgba(17,169,237,.07);
+}
+.garmin-workout-summary .garmin-mark { width: 28px; height: 28px; font-size: 14px; }
+.garmin-workout-summary div { display: flex; flex-direction: column; min-width: 0; }
+.garmin-workout-summary strong { font-size: 11px; }
+.garmin-workout-summary small { color: var(--t3); font-size: 9px; }
+
 /* ============ MOBILE SCROLL PERFORMANCE ============ */
 /* На сенсорном экране вертикальная прокрутка важнее декоративных
    трансформаций. Убираем перерисовки, из-за которых карточки визуально

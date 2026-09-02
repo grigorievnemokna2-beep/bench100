@@ -1,0 +1,4 @@
+<properties>
+    <property id="apiUrl" type="string"></property>
+    <property id="pairCode" type="string"></property>
+</properties>

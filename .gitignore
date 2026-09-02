@@ -1,0 +1,6 @@
+BenchApp/.bench100-sync-data.json
+BenchApp/.bench100-sync-data.json.tmp
+garmin/Bench100Watch/bin/
+garmin/Bench100Watch/monkey.jungle.settings
+sync-worker/.wrangler/
+sync-worker/node_modules/

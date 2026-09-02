@@ -2,13 +2,14 @@
 // Service Worker — кэширует файлы для работы офлайн
 // ============================================================
 
-const CACHE_NAME = 'bench100-v46';
+const CACHE_NAME = 'bench100-v47';
 const URLS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
-  './style.css?v=40',
-  './app.js?v=46',
+  './style.css?v=47',
+  './garmin-sync.js?v=47',
+  './app.js?v=47',
   './program-data.js?v=46',
   './manifest.json',
   './icon-192.png',
@@ -36,6 +37,11 @@ self.addEventListener('activate', event => {
 
 // Запросы: сначала сеть, потом кэш (network-first)
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
   event.respondWith(
     fetch(event.request)
       .then(response => {
