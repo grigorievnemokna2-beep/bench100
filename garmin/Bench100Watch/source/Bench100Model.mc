@@ -119,7 +119,9 @@ class Bench100Model {
     }
 
     function onPendingSent(responseCode, data) {
-        if (responseCode == 200 || responseCode == 201) Storage.deleteValue("pendingResult");
+        if (responseCode == 200 || responseCode == 201) {
+            Storage.deleteValue("pendingResult");
+        }
         fetchWorkout();
     }
 
@@ -161,10 +163,15 @@ class Bench100Model {
 
     function request(path, methodName, body, token, callback) {
         var headers = { "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON };
-        if (token != null && token.length() > 0) headers["Authorization"] = "Bearer " + token;
+        if (token != null && token.length() > 0) {
+            headers["Authorization"] = "Bearer " + token;
+        }
         var method = Communications.HTTP_REQUEST_METHOD_GET;
-        if (methodName.equals("POST")) method = Communications.HTTP_REQUEST_METHOD_POST;
-        else if (methodName.equals("PUT")) method = Communications.HTTP_REQUEST_METHOD_PUT;
+        if (methodName.equals("POST")) {
+            method = Communications.HTTP_REQUEST_METHOD_POST;
+        } else if (methodName.equals("PUT")) {
+            method = Communications.HTTP_REQUEST_METHOD_PUT;
+        }
         var options = {
             :method => method,
             :headers => headers,
@@ -193,7 +200,9 @@ class Bench100Model {
             }
             if (iterator != null) {
                 var sample = iterator.next();
-                if (sample != null && sample.data != null) return sample.data.toNumber();
+                if (sample != null && sample.data != null) {
+                    return sample.data.toNumber();
+                }
             }
         } catch (error) {
             System.println("Sensor history unavailable: " + error.getErrorMessage());
@@ -212,7 +221,9 @@ class Bench100Model {
     }
 
     function sendReadiness() {
-        if (_deviceToken == null) return;
+        if (_deviceToken == null) {
+            return;
+        }
         request("/devices/readiness", "POST", readinessPayload(), _deviceToken, method(:onReadinessSent));
     }
 
@@ -229,20 +240,24 @@ class Bench100Model {
         }
     }
 
-    function onSensor(info) {
+    function onSensor(info as Sensor.Info) as Void {
         if (info.heartRate != null) {
             heartRate = info.heartRate;
             if (state.equals("active") || state.equals("rest") || state.equals("rpe")) {
                 _hrSum += heartRate;
                 _hrSamples += 1;
-                if (heartRate > _maxHr) _maxHr = heartRate;
+                if (heartRate > _maxHr) {
+                    _maxHr = heartRate;
+                }
             }
             update();
         }
     }
 
     function startWorkout() {
-        if (workout == null) return;
+        if (workout == null) {
+            return;
+        }
         try {
             _session = ActivityRecording.createSession({
                 :name => "Bench 100",
@@ -264,10 +279,14 @@ class Bench100Model {
     }
 
     function completeCurrentSet() {
-        if (!state.equals("active")) return;
+        if (!state.equals("active")) {
+            return;
+        }
         var exercise = currentExercise();
         var set = currentSet();
-        if (exercise == null || set == null) return;
+        if (exercise == null || set == null) {
+            return;
+        }
         completedSets.add({
             "x" => exercise["x"],
             "u" => exercise["u"],
@@ -276,7 +295,9 @@ class Bench100Model {
             "r" => set["r"],
             "at" => Time.now().value()
         });
-        if (_session != null && _session.isRecording()) _session.addLap();
+        if (_session != null && _session.isRecording()) {
+            _session.addLap();
+        }
         restSeconds = set["d"] == null ? 90 : set["d"].toNumber();
         moveNext();
         if (isWorkoutComplete()) {
@@ -302,13 +323,17 @@ class Bench100Model {
     function skipRest() {
         _restTimer.stop();
         restSeconds = 0;
-        if (!isWorkoutComplete()) state = "active";
+        if (!isWorkoutComplete()) {
+            state = "active";
+        }
         update();
     }
 
     function moveNext() {
         var exercise = currentExercise();
-        if (exercise == null) return;
+        if (exercise == null) {
+            return;
+        }
         setIndex += 1;
         if (setIndex >= exercise["s"].size()) {
             exerciseIndex += 1;
@@ -319,25 +344,35 @@ class Bench100Model {
 
     function advancePastCompleted() {
         var exercises = workout == null ? null : workout["ex"];
-        if (exercises == null) return;
+        if (exercises == null) {
+            return;
+        }
         while (exerciseIndex < exercises.size()) {
             var exercise = exercises[exerciseIndex];
             var sets = exercise["s"];
-            while (setIndex < sets.size() && sets[setIndex]["c"] == 1) setIndex += 1;
-            if (setIndex < sets.size()) return;
+            while (setIndex < sets.size() && sets[setIndex]["c"] == 1) {
+                setIndex += 1;
+            }
+            if (setIndex < sets.size()) {
+                return;
+            }
             exerciseIndex += 1;
             setIndex = 0;
         }
     }
 
     function currentExercise() {
-        if (workout == null || workout["ex"] == null || exerciseIndex >= workout["ex"].size()) return null;
+        if (workout == null || workout["ex"] == null || exerciseIndex >= workout["ex"].size()) {
+            return null;
+        }
         return workout["ex"][exerciseIndex];
     }
 
     function currentSet() {
         var exercise = currentExercise();
-        if (exercise == null || exercise["s"] == null || setIndex >= exercise["s"].size()) return null;
+        if (exercise == null || exercise["s"] == null || setIndex >= exercise["s"].size()) {
+            return null;
+        }
         return exercise["s"][setIndex];
     }
 
@@ -347,25 +382,37 @@ class Bench100Model {
 
     function requestFinish() {
         _restTimer.stop();
-        if (_session != null && _session.isRecording()) _session.stop();
+        if (_session != null && _session.isRecording()) {
+            _session.stop();
+        }
         state = "rpe";
         update();
     }
 
     function changeRpe(delta) {
-        if (!state.equals("rpe")) return;
+        if (!state.equals("rpe")) {
+            return;
+        }
         rpe += delta;
-        if (rpe < 1) rpe = 1;
-        if (rpe > 10) rpe = 10;
+        if (rpe < 1) {
+            rpe = 1;
+        }
+        if (rpe > 10) {
+            rpe = 10;
+        }
         update();
     }
 
     function submitWorkout() {
-        if (_finishing) return;
+        if (_finishing) {
+            return;
+        }
         _finishing = true;
         if (_session != null) {
             try {
-                if (_session.isRecording()) _session.stop();
+                if (_session.isRecording()) {
+                    _session.stop();
+                }
                 _session.save();
             } catch (error) {
                 System.println("FIT save failed: " + error.getErrorMessage());
@@ -403,18 +450,28 @@ class Bench100Model {
     }
 
     function handleSelect() {
-        if (state.equals("ready")) startWorkout();
-        else if (state.equals("active")) completeCurrentSet();
-        else if (state.equals("rest")) skipRest();
-        else if (state.equals("rpe")) submitWorkout();
-        else if (state.equals("done") || state.equals("empty") || state.equals("error")) fetchWorkout();
+        if (state.equals("ready")) {
+            startWorkout();
+        } else if (state.equals("active")) {
+            completeCurrentSet();
+        } else if (state.equals("rest")) {
+            skipRest();
+        } else if (state.equals("rpe")) {
+            submitWorkout();
+        } else if (state.equals("done") || state.equals("empty") || state.equals("error")) {
+            fetchWorkout();
+        }
     }
 
     function handleTap(y, height) {
         if (state.equals("rpe")) {
-            if (y < height / 3) changeRpe(1);
-            else if (y > (height * 2) / 3) changeRpe(-1);
-            else submitWorkout();
+            if (y < height / 3) {
+                changeRpe(1);
+            } else if (y > (height * 2) / 3) {
+                changeRpe(-1);
+            } else {
+                submitWorkout();
+            }
         } else {
             handleSelect();
         }
@@ -447,14 +504,23 @@ class Bench100Model {
     }
 
     function update() {
-        if (_view != null) WatchUi.requestUpdate();
+        if (_view != null) {
+            WatchUi.requestUpdate();
+        }
     }
 
     function shutdown() {
         _restTimer.stop();
-        try { Sensor.setEnabledSensors([]); } catch (error) { }
+        try {
+            Sensor.setEnabledSensors([]);
+        } catch (error) {
+        }
         if (_session != null && _session.isRecording()) {
-            try { _session.stop(); _session.save(); } catch (error) { }
+            try {
+                _session.stop();
+                _session.save();
+            } catch (error) {
+            }
         }
     }
 }

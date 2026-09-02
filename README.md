@@ -36,11 +36,13 @@ node --test tests\sync-protocol.test.js tests\sync-api.test.js
 
 ## Production setup
 
-1. Deploy `sync-worker/` and create its `SYNC` KV namespace.
-2. Enter the resulting HTTPS URL ending in `/api/v1` in Bench 100 settings.
-3. Build and install the Connect IQ app using the instructions in `garmin/Bench100Watch/README.md`.
-4. In Bench 100 settings press **Новый код**.
-5. Enter the API URL and code in the Bench 100 Watch settings inside Garmin Connect IQ.
-6. Open a training day in Bench 100 and press **Отправить**.
+The production sync API is deployed at:
+
+`https://bench100-sync.bench100-sync-worker.workers.dev/api/v1`
+
+1. Build and install the Connect IQ app using the instructions in `garmin/Bench100Watch/README.md`.
+2. In Bench 100 settings press **Подключить сервер**, then **Новый код**.
+3. Enter the six-digit code in the Bench 100 Watch settings inside Garmin Connect IQ. The production API URL is already prefilled.
+4. Open a training day in Bench 100 and press **Отправить**.
 
 The readiness score is an advisory blend of Body Battery and inverse stress. It does not automatically change the strength program.

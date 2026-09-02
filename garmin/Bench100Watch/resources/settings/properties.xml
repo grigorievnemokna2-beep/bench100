@@ -1,4 +1,4 @@
 <properties>
-    <property id="apiUrl" type="string"></property>
+    <property id="apiUrl" type="string">https://bench100-sync.bench100-sync-worker.workers.dev/api/v1</property>
     <property id="pairCode" type="string"></property>
 </properties>

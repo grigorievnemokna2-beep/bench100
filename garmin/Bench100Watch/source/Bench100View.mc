@@ -19,11 +19,17 @@ class Bench100View extends WatchUi.View {
         dc.clear();
         drawHeader(dc);
 
-        if (_model.state.equals("ready")) drawReady(dc);
-        else if (_model.state.equals("active")) drawActive(dc, false);
-        else if (_model.state.equals("rest")) drawActive(dc, true);
-        else if (_model.state.equals("rpe")) drawRpe(dc);
-        else drawMessage(dc);
+        if (_model.state.equals("ready")) {
+            drawReady(dc);
+        } else if (_model.state.equals("active")) {
+            drawActive(dc, false);
+        } else if (_model.state.equals("rest")) {
+            drawActive(dc, true);
+        } else if (_model.state.equals("rpe")) {
+            drawRpe(dc);
+        } else {
+            drawMessage(dc);
+        }
     }
 
     function drawHeader(dc) {
@@ -41,10 +47,15 @@ class Bench100View extends WatchUi.View {
     function drawMessage(dc) {
         dc.setColor(_text, Graphics.COLOR_TRANSPARENT);
         var title = "BENCH 100";
-        if (_model.state.equals("error")) title = "ОШИБКА";
-        else if (_model.state.equals("done")) title = "ГОТОВО";
-        else if (_model.state.equals("setup")) title = "НАСТРОЙКА";
-        else if (_model.state.equals("empty")) title = "НЕТ ТРЕНИРОВКИ";
+        if (_model.state.equals("error")) {
+            title = "ОШИБКА";
+        } else if (_model.state.equals("done")) {
+            title = "ГОТОВО";
+        } else if (_model.state.equals("setup")) {
+            title = "НАСТРОЙКА";
+        } else if (_model.state.equals("empty")) {
+            title = "НЕТ ТРЕНИРОВКИ";
+        }
         dc.drawText(dc.getWidth() / 2, 145, Graphics.FONT_MEDIUM, title, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(_muted, Graphics.COLOR_TRANSPARENT);
         drawTwoLines(dc, _model.message, 198, Graphics.FONT_SMALL);
@@ -73,7 +84,9 @@ class Bench100View extends WatchUi.View {
     function drawActive(dc, resting) {
         var exercise = _model.currentExercise();
         var set = _model.currentSet();
-        if (exercise == null || set == null) return;
+        if (exercise == null || set == null) {
+            return;
+        }
 
         dc.setColor(_muted, Graphics.COLOR_TRANSPARENT);
         dc.drawText(dc.getWidth() / 2, 82, Graphics.FONT_XTINY,
@@ -113,7 +126,9 @@ class Bench100View extends WatchUi.View {
     function drawProgress(dc) {
         var total = 0;
         var exercises = _model.workout["ex"];
-        for (var i = 0; i < exercises.size(); i++) total += exercises[i]["s"].size();
+        for (var i = 0; i < exercises.size(); i++) {
+            total += exercises[i]["s"].size();
+        }
         var done = _model.completedSets.size();
         var width = dc.getWidth() - 100;
         var filled = total > 0 ? (width * done) / total : 0;
@@ -140,7 +155,9 @@ class Bench100View extends WatchUi.View {
         } else if (source.length() > 22) {
             var middle = source.length() / 2;
             var split = middle;
-            while (split < source.length() && !source.substring(split, split + 1).equals(" ")) split += 1;
+            while (split < source.length() && !source.substring(split, split + 1).equals(" ")) {
+                split += 1;
+            }
             pieces.add(source.substring(0, split));
             pieces.add(source.substring(split, source.length()));
         } else {

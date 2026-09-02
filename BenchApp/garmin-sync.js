@@ -6,6 +6,7 @@
 
 const GarminSync = {
   STORAGE_KEY: 'bench100_garmin_sync',
+  PRODUCTION_ENDPOINT: 'https://bench100-sync.bench100-sync-worker.workers.dev/api/v1',
   app: null,
   config: null,
   _syncTimer: null,
@@ -22,7 +23,7 @@ const GarminSync = {
   defaultConfig() {
     const local = ['localhost', '127.0.0.1'].includes(location.hostname);
     return {
-      endpoint: local ? `${location.origin}/api/v1` : '',
+      endpoint: local ? `${location.origin}/api/v1` : this.PRODUCTION_ENDPOINT,
       accountId: '',
       accountToken: '',
       pairCode: '',
@@ -39,7 +40,9 @@ const GarminSync = {
 
   loadConfig() {
     try {
-      return Object.assign(this.defaultConfig(), JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}'));
+      const config = Object.assign(this.defaultConfig(), JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '{}'));
+      if (!config.endpoint) config.endpoint = this.defaultConfig().endpoint;
+      return config;
     } catch (_) {
       return this.defaultConfig();
     }

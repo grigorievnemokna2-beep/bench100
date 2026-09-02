@@ -22,6 +22,6 @@ Connect IQ watch app for the Bench 100 PWA.
 
 4. Test in the Venu 2 Plus simulator or copy the PRG to `GARMIN/APPS` over USB.
 
-In Garmin Connect IQ app settings enter the deployed sync URL ending in `/api/v1` and the six-digit pairing code shown in Bench 100 settings.
+The production sync URL is already included in the app. In the Garmin Connect IQ app settings enter only the six-digit pairing code shown in Bench 100 settings. The URL remains editable for local development or a future server migration.
 
 Holding the menu button in Bench 100 Watch clears the saved device pairing.

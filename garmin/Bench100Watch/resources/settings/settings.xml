@@ -1,6 +1,6 @@
 <settings>
     <setting propertyKey="@Properties.apiUrl" title="@Strings.ApiUrlTitle" prompt="@Strings.ApiUrlPrompt">
-        <settingConfig type="url" required="true" maxLength="180"/>
+        <settingConfig type="url" required="true"/>
     </setting>
     <setting propertyKey="@Properties.pairCode" title="@Strings.PairCodeTitle" prompt="@Strings.PairCodePrompt">
         <settingConfig type="alphaNumeric" required="true" maxLength="6"/>
