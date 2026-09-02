@@ -26,7 +26,7 @@ const MIME = {
 };
 
 function emptyStore() {
-  return { version: 1, accounts: {}, auth: {}, devices: {}, pairings: {} };
+  return { version: 1, accounts: {}, auth: {}, devices: {}, pairings: {}, watchPairings: {} };
 }
 
 function loadStore() {
@@ -106,7 +106,7 @@ function makePairCode() {
   let code;
   do {
     code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
-  } while (store.pairings[code]);
+  } while (store.pairings[code] || store.watchPairings[code]);
   return code;
 }
 
@@ -114,6 +114,9 @@ function trimStore() {
   const now = Date.now();
   Object.entries(store.pairings).forEach(([code, pairing]) => {
     if (!pairing || pairing.expiresAt <= now) delete store.pairings[code];
+  });
+  Object.entries(store.watchPairings).forEach(([code, pairing]) => {
+    if (!pairing || pairing.expiresAt <= now) delete store.watchPairings[code];
   });
   Object.values(store.accounts).forEach(account => {
     if (Array.isArray(account.results) && account.results.length > 100) {
@@ -163,6 +166,66 @@ async function handleApi(req, res, pathname, searchParams) {
     store.pairings[code] = { accountId: account.id, expiresAt };
     persistStore();
     json(res, 201, { code, expiresAt });
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/v1/devices/pairing') {
+    const body = await readJson(req);
+    trimStore();
+    const code = makePairCode();
+    const pairingToken = randomToken();
+    const expiresAt = Date.now() + 15 * 60 * 1000;
+    store.watchPairings[code] = {
+      tokenHash: tokenHash(pairingToken),
+      name: String(body.name || 'Garmin Venu 2 Plus').slice(0, 80),
+      expiresAt,
+      accountId: null,
+      deviceToken: null
+    };
+    persistStore();
+    json(res, 201, { code, pairingToken, expiresAt });
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/v1/pairing/claim') {
+    const account = accountFromRequest(req, 'account');
+    if (!account) return json(res, 401, { error: 'unauthorized' });
+    const body = await readJson(req);
+    trimStore();
+    const code = String(body.code || '').replace(/\D/g, '').slice(0, 6);
+    const pairing = store.watchPairings[code];
+    if (!pairing || pairing.expiresAt <= Date.now()) {
+      return json(res, 404, { error: 'pairing_code_invalid' });
+    }
+    if (pairing.accountId) return json(res, 409, { error: 'pairing_code_claimed' });
+    const deviceToken = randomToken();
+    const deviceTokenHash = tokenHash(deviceToken);
+    store.devices[deviceTokenHash] = account.id;
+    pairing.accountId = account.id;
+    pairing.deviceToken = deviceToken;
+    account.device = {
+      name: pairing.name,
+      pairedAt: Date.now(),
+      lastSeenAt: Date.now(),
+      tokenHash: deviceTokenHash
+    };
+    persistStore();
+    json(res, 200, { ok: true, device: { name: pairing.name } });
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/v1/devices/pairing/status') {
+    const body = await readJson(req);
+    trimStore();
+    const code = String(body.code || '').replace(/\D/g, '').slice(0, 6);
+    const pairing = store.watchPairings[code];
+    if (!pairing || pairing.expiresAt <= Date.now() || pairing.tokenHash !== tokenHash(body.pairingToken || '')) {
+      return json(res, 404, { error: 'pairing_code_invalid' });
+    }
+    if (!pairing.accountId || !pairing.deviceToken) return json(res, 202, { pending: true });
+    delete store.watchPairings[code];
+    persistStore();
+    json(res, 200, { deviceToken: pairing.deviceToken, accountId: pairing.accountId });
     return;
   }
 
@@ -279,6 +342,9 @@ async function handleApi(req, res, pathname, searchParams) {
     if (account.device && account.device.tokenHash) delete store.devices[account.device.tokenHash];
     Object.entries(store.pairings).forEach(([code, pairing]) => {
       if (pairing.accountId === account.id) delete store.pairings[code];
+    });
+    Object.entries(store.watchPairings).forEach(([code, pairing]) => {
+      if (pairing.accountId === account.id) delete store.watchPairings[code];
     });
     delete store.accounts[account.id];
     persistStore();

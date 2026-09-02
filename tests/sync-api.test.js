@@ -51,6 +51,32 @@ test('account, pairing, workout, readiness and result round-trip', async () => {
   assert.equal(afterDelete.status, 401);
 });
 
+test('watch-generated code can be claimed by the PWA', async () => {
+  if (!server.listening) await new Promise(resolve => server.once('listening', resolve));
+  const account = await jsonRequest('/accounts', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"name":"Reverse pairing"}'
+  });
+  const accountHeaders = { Authorization: `Bearer ${account.accountToken}`, 'Content-Type': 'application/json' };
+  const pairing = await jsonRequest('/devices/pairing', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"name":"Garmin Venu 2 Plus"}'
+  });
+  assert.match(pairing.code, /^\d{6}$/);
+  const pending = await fetch(`${base}/devices/pairing/status`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: pairing.code, pairingToken: pairing.pairingToken })
+  });
+  assert.equal(pending.status, 202);
+  await jsonRequest('/pairing/claim', {
+    method: 'POST', headers: accountHeaders, body: JSON.stringify({ code: pairing.code })
+  });
+  const paired = await jsonRequest('/devices/pairing/status', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: pairing.code, pairingToken: pairing.pairingToken })
+  });
+  assert.ok(paired.deviceToken);
+  await jsonRequest('/accounts', { method: 'DELETE', headers: accountHeaders });
+});
+
 test.after(async () => {
   await new Promise(resolve => server.close(resolve));
   if (fs.existsSync(storePath)) fs.unlinkSync(storePath);

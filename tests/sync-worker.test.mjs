@@ -53,3 +53,32 @@ test('production worker completes a watch sync round-trip', async () => {
   assert.equal((await call('/accounts', { method: 'DELETE', headers: accountHeaders })).response.status, 200);
   assert.equal((await call('/status', { headers: accountHeaders })).response.status, 401);
 });
+
+test('production worker supports watch-generated pairing codes', async () => {
+  const created = await call('/accounts', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"name":"Reverse pairing"}'
+  });
+  const accountHeaders = {
+    Authorization: `Bearer ${created.body.accountToken}`,
+    'Content-Type': 'application/json'
+  };
+  const pairing = await call('/devices/pairing', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"name":"Garmin Venu 2 Plus"}'
+  });
+  assert.equal(pairing.response.status, 201);
+  const pending = await call('/devices/pairing/status', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: pairing.body.code, pairingToken: pairing.body.pairingToken })
+  });
+  assert.equal(pending.response.status, 202);
+  assert.equal((await call('/pairing/claim', {
+    method: 'POST', headers: accountHeaders, body: JSON.stringify({ code: pairing.body.code })
+  })).response.status, 200);
+  const paired = await call('/devices/pairing/status', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: pairing.body.code, pairingToken: pairing.body.pairingToken })
+  });
+  assert.equal(paired.response.status, 200);
+  assert.ok(paired.body.deviceToken);
+  assert.equal((await call('/accounts', { method: 'DELETE', headers: accountHeaders })).response.status, 200);
+});

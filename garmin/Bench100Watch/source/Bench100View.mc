@@ -19,7 +19,9 @@ class Bench100View extends WatchUi.View {
         dc.clear();
         drawHeader(dc);
 
-        if (_model.state.equals("ready")) {
+        if (_model.state.equals("pairing")) {
+            drawPairing(dc);
+        } else if (_model.state.equals("ready")) {
             drawReady(dc);
         } else if (_model.state.equals("active")) {
             drawActive(dc, false);
@@ -79,6 +81,18 @@ class Bench100View extends WatchUi.View {
         dc.setColor(_muted, Graphics.COLOR_TRANSPARENT);
         dc.drawText(dc.getWidth() / 2, 257, Graphics.FONT_XTINY, "ГОТОВНОСТЬ  •  BB " + valueOrDash(_model.bodyBattery) + "  •  СТРЕСС " + valueOrDash(_model.stress), Graphics.TEXT_JUSTIFY_CENTER);
         drawButton(dc, "НАЧАТЬ", 315);
+    }
+
+    function drawPairing(dc) {
+        dc.setColor(_muted, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(dc.getWidth() / 2, 92, Graphics.FONT_XTINY, "КОД ПРИВЯЗКИ", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(_lime, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(dc.getWidth() / 2, 172, Graphics.FONT_NUMBER_MILD, _model.pairingCode, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.setColor(_text, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(dc.getWidth() / 2, 235, Graphics.FONT_SMALL, "Введи код в Bench 100", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(_muted, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(dc.getWidth() / 2, 270, Graphics.FONT_XTINY, "НАСТРОЙКИ → GARMIN CONNECT IQ", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(dc.getWidth() / 2, 326, Graphics.FONT_XTINY, "ОЖИДАЮ ПОДКЛЮЧЕНИЯ…", Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     function drawActive(dc, resting) {

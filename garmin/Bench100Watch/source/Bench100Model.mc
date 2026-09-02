@@ -23,12 +23,15 @@ class Bench100Model {
     var readinessScore = -1;
     var rpe = 8;
     var completedSets = [];
+    var pairingCode = "";
 
     private var _view = null;
     private var _deviceToken = null;
     private var _apiUrl = "";
-    private var _pairCode = "";
+    private var _pairingToken = "";
+    private var _pairRequestPending = false;
     private var _restTimer = null;
+    private var _pairTimer = null;
     private var _session = null;
     private var _startedAt = 0;
     private var _hrSum = 0;
@@ -38,6 +41,7 @@ class Bench100Model {
 
     function initialize() {
         _restTimer = new Timer.Timer();
+        _pairTimer = new Timer.Timer();
         _deviceToken = Storage.getValue("deviceToken");
         loadSettings();
     }
@@ -57,7 +61,7 @@ class Bench100Model {
             return;
         }
         if (_deviceToken == null || _deviceToken.length() == 0) {
-            pair();
+            requestPairingCode();
         } else {
             sendPendingOrFetch();
         }
@@ -72,37 +76,59 @@ class Bench100Model {
 
     function loadSettings() {
         var url = Properties.getValue("apiUrl");
-        var code = Properties.getValue("pairCode");
         _apiUrl = url == null ? "" : url.toString();
         while (_apiUrl.length() > 0 && _apiUrl.substring(_apiUrl.length() - 1, _apiUrl.length()).equals("/")) {
             _apiUrl = _apiUrl.substring(0, _apiUrl.length() - 1);
         }
-        _pairCode = code == null ? "" : code.toString();
     }
 
-    function pair() {
-        if (_pairCode.length() != 6) {
-            state = "setup";
-            message = "Введи 6-значный код\nв настройках Connect IQ";
+    function requestPairingCode() {
+        _pairTimer.stop();
+        _pairRequestPending = false;
+        pairingCode = "";
+        _pairingToken = "";
+        state = "loading";
+        message = "Создаю код привязки...";
+        update();
+        request("/devices/pairing", "POST", {
+            "name" => "Garmin Venu 2 Plus"
+        }, null, method(:onPairingCreated));
+    }
+
+    function onPairingCreated(responseCode, data) {
+        if ((responseCode == 200 || responseCode == 201) && data != null && data["code"] != null && data["pairingToken"] != null) {
+            pairingCode = data["code"].toString();
+            _pairingToken = data["pairingToken"].toString();
+            state = "pairing";
+            message = "";
+            _pairTimer.start(method(:pollPairing), 3000, true);
             update();
+        } else {
+            fail("Не удалось создать код\nПроверь связь с телефоном");
+        }
+    }
+
+    function pollPairing() {
+        if (!state.equals("pairing") || _pairRequestPending || pairingCode.length() != 6) {
             return;
         }
-        state = "loading";
-        message = "Привязываю часы...";
-        update();
-        request("/devices/pair", "POST", {
-            "code" => _pairCode,
-            "name" => "Garmin Venu 2 Plus"
-        }, null, method(:onPaired));
+        _pairRequestPending = true;
+        request("/devices/pairing/status", "POST", {
+            "code" => pairingCode,
+            "pairingToken" => _pairingToken
+        }, null, method(:onPairingStatus));
     }
 
-    function onPaired(responseCode, data) {
-        if (responseCode == 200 || responseCode == 201) {
+    function onPairingStatus(responseCode, data) {
+        _pairRequestPending = false;
+        if (responseCode == 200 && data != null && data["deviceToken"] != null) {
+            _pairTimer.stop();
             _deviceToken = data["deviceToken"];
             Storage.setValue("deviceToken", _deviceToken);
             fetchWorkout();
-        } else {
-            fail("Код не принят\nСоздай новый в Bench 100");
+        } else if (responseCode != 202) {
+            _pairTimer.stop();
+            fail("Код истёк\nНажми — получить новый");
         }
     }
 
@@ -136,7 +162,7 @@ class Bench100Model {
         if (responseCode == 401) {
             _deviceToken = null;
             Storage.deleteValue("deviceToken");
-            pair();
+            requestPairingCode();
             return;
         }
         if (responseCode != 200 || data == null) {
@@ -450,7 +476,9 @@ class Bench100Model {
     }
 
     function handleSelect() {
-        if (state.equals("ready")) {
+        if (state.equals("pairing")) {
+            pollPairing();
+        } else if (state.equals("ready")) {
             startWorkout();
         } else if (state.equals("active")) {
             completeCurrentSet();
@@ -459,7 +487,11 @@ class Bench100Model {
         } else if (state.equals("rpe")) {
             submitWorkout();
         } else if (state.equals("done") || state.equals("empty") || state.equals("error")) {
-            fetchWorkout();
+            if (_deviceToken == null || _deviceToken.length() == 0) {
+                requestPairingCode();
+            } else {
+                fetchWorkout();
+            }
         }
     }
 
@@ -490,11 +522,10 @@ class Bench100Model {
     }
 
     function clearPairing() {
+        _pairTimer.stop();
         _deviceToken = null;
         Storage.deleteValue("deviceToken");
-        state = "setup";
-        message = "Связь сброшена\nВведи новый код";
-        update();
+        requestPairingCode();
     }
 
     function fail(text) {
@@ -511,6 +542,7 @@ class Bench100Model {
 
     function shutdown() {
         _restTimer.stop();
+        _pairTimer.stop();
         try {
             Sensor.setEnabledSensors([]);
         } catch (error) {

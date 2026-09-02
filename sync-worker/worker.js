@@ -104,6 +104,67 @@ async function handle(request, env) {
     return reply({ code, expiresAt }, 201);
   }
 
+  // USB-installed Connect IQ apps are not configurable through Garmin Connect.
+  // Let the watch create a short code instead, then let the authenticated PWA
+  // claim it. A separate secret proves that the polling watch owns the code.
+  if (method === 'POST' && path === '/api/v1/devices/pairing') {
+    const body = await readJson(request);
+    let code = sixDigitCode();
+    for (let i = 0; i < 6 && (
+      await env.SYNC.get(`pair:${code}`) || await env.SYNC.get(`watchpair:${code}`)
+    ); i++) code = sixDigitCode();
+    const pairingToken = randomToken();
+    const expiresAt = Date.now() + 15 * 60 * 1000;
+    await env.SYNC.put(`watchpair:${code}`, JSON.stringify({
+      tokenHash: await hashToken(pairingToken),
+      name: String(body.name || 'Garmin Venu 2 Plus').slice(0, 80),
+      expiresAt,
+      accountId: null,
+      deviceToken: null
+    }), { expirationTtl: 15 * 60 });
+    return reply({ code, pairingToken, expiresAt }, 201);
+  }
+
+  if (method === 'POST' && path === '/api/v1/pairing/claim') {
+    const account = await authenticatedAccount(request, env, 'account');
+    if (!account) return reply({ error: 'unauthorized' }, 401);
+    const body = await readJson(request);
+    const code = String(body.code || '').replace(/\D/g, '').slice(0, 6);
+    const pairing = await env.SYNC.get(`watchpair:${code}`, 'json');
+    if (!pairing || pairing.expiresAt <= Date.now()) return reply({ error: 'pairing_code_invalid' }, 404);
+    if (pairing.accountId) return reply({ error: 'pairing_code_claimed' }, 409);
+    const deviceToken = randomToken();
+    const deviceTokenHash = await hashToken(deviceToken);
+    pairing.accountId = account.id;
+    pairing.deviceToken = deviceToken;
+    account.device = {
+      name: pairing.name,
+      pairedAt: Date.now(),
+      lastSeenAt: Date.now(),
+      tokenHash: deviceTokenHash
+    };
+    const ttl = Math.max(60, Math.ceil((pairing.expiresAt - Date.now()) / 1000));
+    await Promise.all([
+      saveAccount(env, account),
+      env.SYNC.put(`device:${deviceTokenHash}`, account.id),
+      env.SYNC.put(`watchpair:${code}`, JSON.stringify(pairing), { expirationTtl: ttl })
+    ]);
+    return reply({ ok: true, device: { name: pairing.name } });
+  }
+
+  if (method === 'POST' && path === '/api/v1/devices/pairing/status') {
+    const body = await readJson(request);
+    const code = String(body.code || '').replace(/\D/g, '').slice(0, 6);
+    const pairing = await env.SYNC.get(`watchpair:${code}`, 'json');
+    const suppliedHash = await hashToken(body.pairingToken || '');
+    if (!pairing || pairing.expiresAt <= Date.now() || pairing.tokenHash !== suppliedHash) {
+      return reply({ error: 'pairing_code_invalid' }, 404);
+    }
+    if (!pairing.accountId || !pairing.deviceToken) return reply({ pending: true }, 202);
+    await env.SYNC.delete(`watchpair:${code}`);
+    return reply({ deviceToken: pairing.deviceToken, accountId: pairing.accountId });
+  }
+
   if (method === 'POST' && path === '/api/v1/devices/pair') {
     const body = await readJson(request);
     const code = String(body.code || '').replace(/\D/g, '').slice(0, 6);

@@ -84,6 +84,7 @@ const GarminSync = {
       const messages = {
         unauthorized: 'Связь устарела — подключи её заново',
         pairing_code_invalid: 'Код привязки недействителен',
+        pairing_code_claimed: 'Этот код уже использован',
         invalid_workout: 'Сервер не принял формат тренировки'
       };
       throw new Error(messages[data.error] || `Ошибка сервера: ${response.status}`);
@@ -119,9 +120,8 @@ const GarminSync = {
       this.config.accountToken = created.accountToken;
       this.config.lastError = '';
       this.saveConfig();
-      this.app.showToast('Сервер подключён');
+      this.app.showToast('Сервер подключён — открой Bench 100 на часах');
       this.app.renderSettings();
-      await this.makePairingCode();
     } catch (error) {
       this.config.lastError = error.message;
       this.saveConfig();
@@ -178,6 +178,38 @@ const GarminSync = {
       this.app.showToast('Код скопирован');
     } catch (_) {
       this.app.showToast(`Код: ${this.config.pairCode}`);
+    }
+  },
+
+  async claimWatchCode() {
+    if (!this.isConnected()) return;
+    const input = document.getElementById('garmin-watch-code');
+    const code = String(input ? input.value : '').replace(/\D/g, '').slice(0, 6);
+    if (code.length !== 6) {
+      this.app.showToast('Введи шесть цифр с экрана часов');
+      return;
+    }
+    this.setBusy(true, 'Привязываю часы…');
+    try {
+      const result = await this.request('/pairing/claim', {
+        method: 'POST',
+        body: JSON.stringify({ code })
+      });
+      this.config.device = result.device || { name: 'Garmin Venu 2 Plus' };
+      this.config.pairCode = '';
+      this.config.pairExpiresAt = 0;
+      this.config.lastError = '';
+      this.saveConfig();
+      this.app.renderSettings();
+      this.app.showToast('Venu 2 Plus подключены');
+      setTimeout(() => this.refresh(true), 1200);
+    } catch (error) {
+      this.config.lastError = error.message;
+      this.saveConfig();
+      this.app.showToast(error.message);
+      this.app.renderSettings();
+    } finally {
+      this.setBusy(false);
     }
   },
 
@@ -451,14 +483,13 @@ const GarminSync = {
     const connected = this.isConnected();
     const endpoint = this.escape(this.config.endpoint || '');
     const device = this.config.device;
-    const pairValid = this.config.pairCode && this.config.pairExpiresAt > Date.now();
     const score = this.readinessScore(this.config.readiness);
     const readiness = this.readinessLabel(score);
     const error = this.config.lastError
       ? `<div class="garmin-error">${this.escape(this.config.lastError)}</div>` : '';
     const deviceHtml = device
       ? `<div class="garmin-device connected"><span class="garmin-dot"></span><div><strong>${this.escape(device.name || 'Garmin')}</strong><small>Часы подключены</small></div></div>`
-      : `<div class="garmin-device"><span class="garmin-dot"></span><div><strong>Venu 2 Plus</strong><small>${connected ? 'Ожидает ввода кода на часах' : 'Не подключены'}</small></div></div>`;
+      : `<div class="garmin-device"><span class="garmin-dot"></span><div><strong>Venu 2 Plus</strong><small>${connected ? 'Открой Bench 100 на часах' : 'Не подключены'}</small></div></div>`;
 
     let controls = '';
     if (!connected) {
@@ -467,10 +498,6 @@ const GarminSync = {
         <input id="garmin-api-url" class="form-input" value="${endpoint}" placeholder="https://…/api/v1" onchange="GarminSync.setEndpoint(this.value)">
         <button class="btn-primary garmin-main-btn" onclick="GarminSync.connect()">Подключить сервер</button>`;
     } else {
-      const pairHtml = pairValid ? `
-        <button class="garmin-pair-code" onclick="GarminSync.copyPairCode()">
-          <span>Код привязки</span><strong>${this.escape(this.config.pairCode)}</strong><small>Нажми, чтобы скопировать</small>
-        </button>` : '';
       const readinessHtml = this.config.readiness ? `
         <div class="garmin-readiness ${readiness.cls}">
           <div><small>Готовность</small><strong>${score === null ? '—' : score}</strong></div>
@@ -479,10 +506,12 @@ const GarminSync = {
           <span>${readiness.text}</span>
         </div>` : '';
       controls = `
-        ${pairHtml}
+        ${device ? '' : `
+          <label class="garmin-field-label" for="garmin-watch-code">Код с экрана часов</label>
+          <input id="garmin-watch-code" class="form-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" placeholder="000000">
+          <button class="btn-primary garmin-main-btn" onclick="GarminSync.claimWatchCode()">Привязать часы</button>`}
         ${readinessHtml}
         <div class="garmin-actions">
-          <button class="btn-secondary" onclick="GarminSync.makePairingCode()">Новый код</button>
           <button class="btn-secondary" onclick="GarminSync.refresh()">Получить данные</button>
         </div>
         <button class="garmin-disconnect" onclick="GarminSync.disconnect()">Отключить Garmin</button>`;
