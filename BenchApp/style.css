@@ -942,6 +942,16 @@ body {
   margin-top: 1px;
   font-weight: 600;
 }
+.set-plate-breakdown {
+  display: block;
+  margin-top: 3px;
+  color: var(--t2);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.plate-unavailable { color: var(--warn, #ffb84d); }
 .set-reps.editable {
   cursor: pointer;
   border-bottom: 1px dashed var(--line);
@@ -2451,6 +2461,40 @@ body {
   color: #000;
   border-color: var(--accent);
 }
+.settings-plates-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.settings-plate-btn {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg2);
+  color: var(--t3);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.settings-plate-btn small { font-size: 11px; font-weight: 400; }
+.settings-plate-btn.active {
+  color: #000;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.settings-plate-btn:focus-visible,
+.settings-plate-add button:focus-visible { outline: 2px solid var(--t1); outline-offset: 3px; }
+.settings-plate-add { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.settings-plate-add .form-input { min-width: 0; flex: 1; }
+.settings-plate-add .settings-step-btn { flex: 0 0 auto; min-height: 46px; }
+.plate-rounding-note { line-height: 1.6; }
+.plate-example {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  font-size: 14px;
+}
+.plate-example > strong { display: block; margin-bottom: 6px; color: var(--t1); }
 
 /* ============ DAY PICKER ============ */
 .day-picker-overlay {

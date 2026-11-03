@@ -21,6 +21,14 @@ Account and device credentials are independent random 256-bit tokens. Tokens are
 
 ## Local development
 
+### Gym plates
+
+In **Настройки → Блины в зале**, select the denominations available at the gym or add a custom weight. The default selection is 1.25, 2.5, 5, 10, 15, 20 and 25 kg. The calculation assumes symmetric pairs and does not limit the number of each plate.
+
+Barbell percentage weights round to the nearest load that can actually be assembled with the selected bar and plates (ties round down). Each set shows the plate combination for one side. Dumbbell/cable weights keep their separate adjustment step. Data version 4 snapshots completed percentage weights before migration/settings changes, so previous training records are preserved. The same planned weights are sent to Garmin.
+
+### Run locally
+
 ```powershell
 cd BenchApp
 node server.js
@@ -31,7 +39,7 @@ Open `http://localhost:3000`. The local API is `http://localhost:3000/api/v1`.
 Run tests from the repository root:
 
 ```powershell
-node --test tests\sync-protocol.test.js tests\sync-api.test.js
+node --test tests\plate-calculator.test.js tests\plate-settings.test.js tests\sync-protocol.test.js tests\sync-api.test.js tests\sync-worker.test.mjs
 ```
 
 ## Production setup

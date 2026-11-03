@@ -332,7 +332,7 @@ const GarminSync = {
     if (exercise.segments && !exercise.isIndividual) {
       let setIndex = 0;
       exercise.segments.forEach(segment => {
-        const calculated = this.app.roundWeight(cycle.maxWeight * segment.percent / 100);
+        const calculated = this.app.roundWeight(cycle.maxWeight * segment.percent / 100, exercise);
         for (let i = 0; i < segment.sets; i++) {
           const override = saved && saved.setWeights && saved.setWeights[setIndex] !== undefined
             ? saved.setWeights[setIndex] : calculated;

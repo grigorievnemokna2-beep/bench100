@@ -2,14 +2,15 @@
 // Service Worker — кэширует файлы для работы офлайн
 // ============================================================
 
-const CACHE_NAME = 'bench100-v49';
+const CACHE_NAME = 'bench100-v51';
 const URLS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
-  './style.css?v=48',
-  './garmin-sync.js?v=49',
-  './app.js?v=48',
+  './style.css?v=51',
+  './garmin-sync.js?v=51',
+  './plate-calculator.js?v=51',
+  './app.js?v=51',
   './program-data.js?v=46',
   './manifest.json',
   './icon-192.png',
