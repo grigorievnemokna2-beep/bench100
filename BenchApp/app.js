@@ -132,6 +132,70 @@ const App = {
       programRepaired = true;
     }
     if (programRepaired) this.saveData();
+
+    const hasPlateSettings = Array.isArray(this.data.availablePlates);
+    if (Number(this.data.version) < 4 || !hasPlateSettings) {
+      const oldStep = this.data.weightStep || 0.5;
+      this.preserveCompletedWeights(hasPlateSettings
+        ? (weight, exercise) => this.roundWeight(weight, exercise)
+        : weight => Math.round(weight / oldStep) * oldStep);
+      this.data.availablePlates = hasPlateSettings
+        ? PlateCalculator.normalizePlates(this.data.availablePlates)
+        : [...PlateCalculator.DEFAULT_PLATES];
+      this.data.version = 4;
+      this.saveData();
+    } else {
+      this.data.availablePlates = PlateCalculator.normalizePlates(this.data.availablePlates);
+    }
+  },
+
+  // Сохраняем ранее показанные веса выполненных подходов до смены расчёта.
+  preserveCompletedWeights(calculate = (weight, exercise) => this.roundWeight(weight, exercise)) {
+    (this.data.cycles || []).forEach(cycle => {
+      this.getCycleProgram(cycle).forEach(week => week.days.forEach(day => {
+        const workout = cycle.workouts && cycle.workouts[`${week.week}-${day.day}`];
+        if (!workout || !workout.exercises) return;
+        day.exercises.forEach((exercise, index) => {
+          const saved = workout.exercises[index];
+          if (!saved) return;
+          this.snapshotCompletedExercise(exercise, saved, cycle.maxWeight, calculate);
+          if (exercise.superset && saved.superset) {
+            this.snapshotCompletedExercise(exercise.superset, saved.superset, cycle.maxWeight, calculate);
+          }
+        });
+      }));
+    });
+  },
+
+  snapshotCompletedExercise(exercise, saved, maxWeight, calculate) {
+    let index = 0;
+    if (exercise.segments && !exercise.isIndividual) {
+      exercise.segments.forEach(segment => {
+        for (let i = 0; i < segment.sets; i++, index++) {
+          const set = saved.sets && saved.sets[index];
+          if (!set || (!set.done && set.actualReps === undefined)) continue;
+          if (!saved.setWeights) saved.setWeights = {};
+          if (saved.setWeights[index] === undefined) {
+            saved.setWeights[index] = calculate(maxWeight * segment.percent / 100, exercise);
+            set.weightSnapshot = true;
+          }
+          if (this.isBarbellExercise(exercise) && set.barWeightSnapshot === undefined) set.barWeightSnapshot = this.data.barWeight || 20;
+        }
+      });
+    } else if (this.isBarbellExercise(exercise)) {
+      Object.values(saved.sets || {}).forEach(set => {
+        if (set.done && set.barWeightSnapshot === undefined) set.barWeightSnapshot = this.data.barWeight || 20;
+      });
+    }
+  },
+
+  snapshotCurrentExercise(saved, isSuperset = false) {
+    const cycle = this.getCycle();
+    const week = this.getCycleProgram(cycle).find(item => item.week === this.currentWeek);
+    const day = week && week.days.find(item => item.day === this.currentDay);
+    let exercise = day && day.exercises[this.currentExIndex];
+    if (isSuperset) exercise = exercise && exercise.superset;
+    if (exercise) this.snapshotCompletedExercise(exercise, saved, cycle.maxWeight, weight => this.roundWeight(weight, exercise));
   },
 
   migratePowerliftingWorkoutIndexes(cycle) {
@@ -239,6 +303,40 @@ const App = {
   },
 
   // ==================== ВЕС НА СТОРОНУ ====================
+  formatKg(value) {
+    return Number(value).toLocaleString('ru-RU', { maximumFractionDigits: 2 });
+  },
+
+  isBarbellExercise(exercise) {
+    if (exercise && /гантел|блок|тренаж|кроссовер/i.test(exercise.name || '')) return false;
+    return Boolean(exercise && ((exercise.segments && !exercise.isIndividual)
+      || /штанг|становая тяга/i.test(exercise.name || '')));
+  },
+
+  getPlateLoad(weight, barWeight = this.data.barWeight || 20, mode = 'nearest') {
+    const plates = Array.isArray(this.data.availablePlates)
+      ? this.data.availablePlates : PlateCalculator.DEFAULT_PLATES;
+    const key = `${barWeight}:${plates.join(',')}:${mode}:${weight}`;
+    if (!this._plateCache) this._plateCache = new Map();
+    if (!this._plateCache.has(key)) {
+      if (this._plateCache.size >= 300) this._plateCache.clear();
+      this._plateCache.set(key, PlateCalculator.calculate(weight, { barWeight, plates, mode }));
+    }
+    return this._plateCache.get(key);
+  },
+
+  renderPlateHint(weight, set = null) {
+    const barWeight = set && set.barWeightSnapshot !== undefined
+      ? set.barWeightSnapshot : this.data.barWeight || 20;
+    const load = this.getPlateLoad(weight, barWeight);
+    if (!load.exact) {
+      return `<div class="set-plate-hint plate-unavailable">Не собрать с выбранными блинами<span class="set-plate-breakdown">Ближайший вес: ${this.formatKg(load.weight)} кг · гриф ${this.formatKg(barWeight)} кг</span></div>`;
+    }
+    if (!load.plates.length) return `<div class="set-plate-hint">Пустой гриф: ${this.formatKg(barWeight)} кг</div>`;
+    const breakdown = load.plates.map(plate => `${plate.count > 1 ? plate.count + ' × ' : ''}${this.formatKg(plate.weight)}`).join(' + ');
+    return `<div class="set-plate-hint">По ${this.formatKg(load.perSide)} кг на сторону<span class="set-plate-breakdown">${breakdown} кг · гриф ${this.formatKg(barWeight)} кг</span></div>`;
+  },
+
   getPerSide(weight) {
     const bar = this.data.barWeight || 20;
     const perSide = (weight - bar) / 2;
@@ -252,6 +350,7 @@ const App = {
     if (val === null) return;
     const w = parseFloat(val);
     if (!w || w <= 0) return;
+    this.preserveCompletedWeights();
     this.data.barWeight = w;
     this.saveData();
     if (this.currentExIndex !== null) this.renderSets();
@@ -637,6 +736,7 @@ const App = {
     if (!newMax || newMax <= 0) { this.showToast('Введи корректный вес'); return; }
 
     const cycle = this.getCycle();
+    this.preserveCompletedWeights();
     cycle.maxWeight = newMax;
     this.saveData();
 
@@ -780,9 +880,16 @@ const App = {
 
       if (ex.segments && !ex.isIndividual) {
         // Базовое упражнение с процентами
+        let setIndex = 0;
         detailsHtml = ex.segments.map(seg => {
-          const weight = this.roundWeight(maxWeight * seg.percent / 100);
-          return `<span class="ex-weight">${weight} кг</span> x ${seg.reps} повт. x ${seg.sets} подх.`;
+          const calculated = this.roundWeight(maxWeight * seg.percent / 100, ex);
+          const weights = Array.from({ length: seg.sets }, () => {
+            const index = setIndex++;
+            return saved && saved.setWeights && saved.setWeights[index] !== undefined
+              ? saved.setWeights[index] : calculated;
+          });
+          const label = [...new Set(weights)].map(weight => this.formatKg(weight)).join(' / ');
+          return `<span class="ex-weight">${label} кг</span> x ${seg.reps} повт. x ${seg.sets} подх.`;
         }).join('<br>');
       } else if (ex.isSpecial) {
         detailsHtml = ex.note ? this.escapeHtml(ex.note) : `${ex.totalReps} повторений`;
@@ -1020,6 +1127,7 @@ const App = {
       this.checkWorkoutCompletion(workout);
     }
 
+    this.snapshotCurrentExercise(exData, isSuperset);
     this.saveData();
     this.closeModal();
     this.renderSets();
@@ -1030,7 +1138,7 @@ const App = {
     let setNum = 0;
 
     ex.segments.forEach((seg, segIdx) => {
-      const calcWeight = this.roundWeight(maxWeight * seg.percent / 100);
+      const calcWeight = this.roundWeight(maxWeight * seg.percent / 100, ex);
       const displayWeight = isNaN(calcWeight) ? 0 : calcWeight;
       for (let i = 0; i < seg.sets; i++) {
         setNum++;
@@ -1041,10 +1149,9 @@ const App = {
         const overrideWeight = saved && saved.setWeights && saved.setWeights[setNum - 1] !== undefined
           ? saved.setWeights[setNum - 1] : null;
         const weight = overrideWeight !== null ? overrideWeight : displayWeight;
-        const isOverridden = overrideWeight !== null;
-
-        const perSide = this.getPerSide(weight);
-        const perSideHtml = perSide !== null ? `<div class="set-plate-hint">по ${perSide} кг/сторону</div>` : '';
+        const set = saved && saved.sets && saved.sets[setNum - 1];
+        const isOverridden = overrideWeight !== null && !(set && set.weightSnapshot);
+        const perSideHtml = this.isBarbellExercise(ex) ? this.renderPlateHint(weight, set) : '';
         const actualReps = this.getActualReps(saved, setNum - 1, seg.reps);
 
         html += `
@@ -1079,8 +1186,8 @@ const App = {
         ? saved.setWeights[i]
         : (saved && saved.weight ? saved.weight : null);
 
-      const perSide = setWeight ? this.getPerSide(setWeight) : null;
-      const perSideHtml = perSide !== null ? `<div class="set-plate-hint">по ${perSide} кг/сторону</div>` : '';
+      const set = saved && saved.sets && saved.sets[i];
+      const perSideHtml = setWeight && this.isBarbellExercise(ex) ? this.renderPlateHint(setWeight, set) : '';
       const actualReps = this.getActualReps(saved, i, ex.reps);
 
       html += `
@@ -1204,6 +1311,8 @@ const App = {
       exData.sets[setIdx].done = true;
       exData.sets[setIdx].timestamp = new Date().toISOString();
     }
+
+    this.snapshotCurrentExercise(exData, isSuperset);
 
     // Считаем выполненные
     exData.completedSets = Object.values(exData.sets).filter(s => s.done).length;
@@ -1337,6 +1446,24 @@ const App = {
   saveSetWeight(setIdx, weight, isSuperset) {
     const cycle = this.getCycle();
     const workoutKey = `${this.currentWeek}-${this.currentDay}`;
+    const currentWeek = this.getCycleProgram(cycle).find(item => item.week === this.currentWeek);
+    const currentDay = currentWeek.days.find(item => item.day === this.currentDay);
+    const exercise = isSuperset ? currentDay.exercises[this.currentExIndex].superset : currentDay.exercises[this.currentExIndex];
+    const existingWorkout = cycle.workouts && cycle.workouts[workoutKey];
+    const existingMain = existingWorkout && existingWorkout.exercises && existingWorkout.exercises[this.currentExIndex];
+    const existing = isSuperset ? existingMain && existingMain.superset : existingMain;
+    const existingSet = existing && existing.sets && existing.sets[setIdx];
+    const recorded = Boolean((existingWorkout && existingWorkout.finishedAt)
+      || (existingSet && (existingSet.timestamp || existingSet.done || existingSet.actualReps !== undefined || existingSet.weightSnapshot)));
+    if (!Number.isFinite(Number(weight)) || weight < 0 || weight > 10000) {
+      this.showToast('Введи корректный вес от 0 до 10000 кг');
+      return;
+    }
+    if (this.isBarbellExercise(exercise) && !recorded) {
+      const rounded = this.roundWeight(weight, exercise);
+      if (Math.abs(rounded - weight) > 0.001) this.showToast(`Доступный вес: ${this.formatKg(rounded)} кг`);
+      weight = rounded;
+    }
 
     if (!cycle.workouts) cycle.workouts = {};
     if (!cycle.workouts[workoutKey]) {
@@ -1368,6 +1495,7 @@ const App = {
     // Сохраняем вес для конкретного подхода
     if (!exData.setWeights) exData.setWeights = {};
     exData.setWeights[setIdx] = weight;
+    if (exData.sets && exData.sets[setIdx]) delete exData.sets[setIdx].weightSnapshot;
 
     // Также обновляем общий вес (последний введённый)
     exData.weight = weight;
@@ -1515,7 +1643,7 @@ const App = {
             if (pEx.segments && !pEx.isIndividual) {
               let setNum = 0;
               pEx.segments.forEach(seg => {
-                const calcW = this.roundWeight(c.maxWeight * seg.percent / 100);
+                const calcW = this.roundWeight(c.maxWeight * seg.percent / 100, pEx);
                 for (let s = 0; s < seg.sets; s++) {
                   totalSets++;
                   const ov = exData.setWeights && exData.setWeights[setNum] !== undefined ? exData.setWeights[setNum] : null;
@@ -1604,7 +1732,7 @@ const App = {
       let planSets = [];
       if (curEx.segments && !curEx.isIndividual) {
         curEx.segments.forEach(seg => {
-          const calcW = this.roundWeight(curCycle.maxWeight * seg.percent / 100);
+          const calcW = this.roundWeight(curCycle.maxWeight * seg.percent / 100, curEx);
           planSets.push({ weight: calcW, reps: seg.reps, sets: seg.sets });
         });
       } else if (curEx.isIndividual) {
@@ -1958,7 +2086,12 @@ const App = {
 
     if (!exData.setWeights) exData.setWeights = {};
     const current = exData.setWeights[setIdx] !== undefined ? exData.setWeights[setIdx] : (exData.weight || 0);
-    const newW = Math.max(0, Math.round((current + delta) * 10) / 10);
+    const week = this.getCycleProgram(cycle).find(item => item.week === this.currentWeek);
+    const day = week.days.find(item => item.day === this.currentDay);
+    const exercise = isSuperset ? day.exercises[exKey].superset : day.exercises[exKey];
+    const newW = this.isBarbellExercise(exercise)
+      ? this.getPlateLoad(Math.max(0, current + (delta > 0 ? 0.01 : -0.01)), this.data.barWeight || 20, delta > 0 ? 'ceil' : 'floor').weight
+      : Math.max(0, Math.round((current + delta) * 100) / 100);
     this.saveSetWeight(setIdx, newW, isSuperset);
   },
 
@@ -2012,6 +2145,14 @@ const App = {
 
     const barWeight = this.data.barWeight || 20;
     const weightStep = this.data.weightStep || 0.5;
+    const availablePlates = this.data.availablePlates || [];
+    const plateOptions = PlateCalculator.normalizePlates([...PlateCalculator.DEFAULT_PLATES, 1, 0.5, ...availablePlates]);
+    const plateButtons = plateOptions.map(weight => {
+      const active = availablePlates.includes(weight);
+      return `<button type="button" class="settings-plate-btn ${active ? 'active' : ''}" aria-pressed="${active}" aria-label="Блин ${this.formatKg(weight)} кг" onclick="App.togglePlate(${weight})">${this.formatKg(weight)} <small>кг</small></button>`;
+    }).join('');
+    const exampleTarget = barWeight + 62;
+    const example = this.getPlateLoad(exampleTarget);
 
     container.innerHTML = `
       ${typeof GarminSync !== 'undefined' ? GarminSync.renderSettingsCard() : ''}
@@ -2021,12 +2162,23 @@ const App = {
         <div class="settings-days-row">${daysHtml}</div>
       </div>
       <div class="settings-section">
-        <div class="settings-label">Вес грифа (кг)</div>
-        <input type="number" id="settings-bar-weight" class="form-input" value="${barWeight}" step="0.5" inputmode="decimal" onchange="App.saveBarWeightSetting(this.value)">
+        <label class="settings-label" for="settings-bar-weight">Вес грифа (кг)</label>
+        <input type="number" id="settings-bar-weight" class="form-input" value="${barWeight}" min="0.1" max="100" step="0.1" inputmode="decimal" onchange="App.saveBarWeightSetting(this.value)">
       </div>
       <div class="settings-section">
-        <div class="settings-label">Шаг округления веса</div>
-        <div class="settings-hint">Минимальный шаг блинов</div>
+        <div class="settings-label">Блины в зале</div>
+        <div class="settings-hint">Выбери вес одного блина. На штангу блины ставятся одинаково с двух сторон.</div>
+        <div class="settings-plates-grid">${plateButtons}</div>
+        <form class="settings-plate-add" onsubmit="event.preventDefault(); App.addPlate()">
+          <input class="form-input" id="settings-custom-plate" type="text" inputmode="decimal" placeholder="Другой вес, кг" aria-label="Вес своего блина в килограммах" maxlength="7">
+          <button class="settings-step-btn" type="submit">Добавить</button>
+        </form>
+        <div class="settings-hint plate-rounding-note">Вес по процентам округляется до ближайшего набираемого. При равном расстоянии — вниз. Количество пар каждого номинала не ограничено.</div>
+        <div class="plate-example" aria-live="polite"><strong>${this.formatKg(exampleTarget)} → ${this.formatKg(example.weight)} кг</strong>${this.renderPlateHint(example.weight)}</div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-label">Шаг кнопок + / − для гантелей и тренажёров</div>
+        <div class="settings-hint">Для штанги шаг определяется выбранными блинами</div>
         <div class="settings-step-row">
           <button class="settings-step-btn ${weightStep === 0.5 ? 'active' : ''}" onclick="App.setWeightStep(0.5)">0.5 кг</button>
           <button class="settings-step-btn ${weightStep === 1 ? 'active' : ''}" onclick="App.setWeightStep(1)">1 кг</button>
@@ -2058,9 +2210,41 @@ const App = {
 
   saveBarWeightSetting(val) {
     const w = parseFloat(val);
-    if (!w || w <= 0) return;
+    if (!Number.isFinite(w) || w <= 0 || w > 100) {
+      this.showToast('Вес грифа должен быть от 0,1 до 100 кг');
+      this.renderSettings();
+      return;
+    }
+    this.preserveCompletedWeights();
     this.data.barWeight = w;
     this.saveData();
+    this.renderSettings();
+  },
+
+  togglePlate(weight) {
+    const plates = this.data.availablePlates || [];
+    const next = plates.includes(weight) ? plates.filter(value => value !== weight) : [...plates, weight];
+    if (!next.length) {
+      this.showToast('Оставь хотя бы один доступный вес блинов');
+      return;
+    }
+    this.preserveCompletedWeights();
+    this.data.availablePlates = PlateCalculator.normalizePlates(next);
+    this.saveData();
+    this.renderSettings();
+  },
+
+  addPlate() {
+    const input = document.getElementById('settings-custom-plate');
+    const value = Number(input.value.trim().replace(',', '.'));
+    if (!Number.isFinite(value) || value < 0.05 || value > 100) {
+      this.showToast('Введи вес одного блина от 0,05 до 100 кг');
+      return;
+    }
+    this.preserveCompletedWeights();
+    this.data.availablePlates = PlateCalculator.normalizePlates([...(this.data.availablePlates || []), value]);
+    this.saveData();
+    this.renderSettings();
   },
 
   setWeightStep(step) {
@@ -2449,7 +2633,7 @@ const App = {
               ex.segments.forEach(seg => {
                 for (let s = 0; s < seg.sets; s++) {
                   const ov = ed.setWeights && ed.setWeights[sn] !== undefined ? ed.setWeights[sn] : null;
-                  const w = ov !== null ? ov : this.roundWeight(cycle.maxWeight * seg.percent / 100);
+                  const w = ov !== null ? ov : this.roundWeight(cycle.maxWeight * seg.percent / 100, ex);
                   const done = ed.sets && ed.sets[sn] && ed.sets[sn].done;
                   if (done) {
                     const actualR = ed.sets[sn].actualReps !== undefined ? ed.sets[sn].actualReps : seg.reps;
@@ -2624,7 +2808,7 @@ const App = {
               ex.segments.forEach(seg => {
                 for (let s = 0; s < seg.sets; s++) {
                   const ov = ed.setWeights && ed.setWeights[sn] !== undefined ? ed.setWeights[sn] : null;
-                  const w = ov !== null ? ov : this.roundWeight(c.maxWeight * seg.percent / 100);
+                  const w = ov !== null ? ov : this.roundWeight(c.maxWeight * seg.percent / 100, ex);
                   const done = ed.sets && ed.sets[sn] && ed.sets[sn].done;
                   if (done) {
                     const actualR = ed.sets[sn].actualReps !== undefined ? ed.sets[sn].actualReps : seg.reps;
@@ -2738,7 +2922,7 @@ const App = {
               if (ex.segments && !ex.isIndividual) {
                 let sn = 0;
                 ex.segments.forEach(seg => {
-                  const calcW = this.roundWeight(c.maxWeight * seg.percent / 100);
+                  const calcW = this.roundWeight(c.maxWeight * seg.percent / 100, ex);
                   for (let s = 0; s < seg.sets; s++) {
                     const done = ed.sets && ed.sets[sn] && ed.sets[sn].done;
                     if (done) {
@@ -2879,7 +3063,7 @@ const App = {
             if (ex.segments && !ex.isIndividual) {
               let sn = 0;
               ex.segments.forEach(seg => {
-                const cW = this.roundWeight(currentCycle.maxWeight * seg.percent / 100);
+                const cW = this.roundWeight(currentCycle.maxWeight * seg.percent / 100, ex);
                 for (let s = 0; s < seg.sets; s++) {
                   totalSetsW++;
                   const ov = ed.setWeights && ed.setWeights[sn] !== undefined ? ed.setWeights[sn] : null;
@@ -3503,7 +3687,7 @@ const App = {
     if (ex.segments && !ex.isIndividual) {
       let setNum = 0;
       ex.segments.forEach(seg => {
-        const calcW = this.roundWeight(cycleMaxWeight * seg.percent / 100);
+        const calcW = this.roundWeight(cycleMaxWeight * seg.percent / 100, ex);
         for (let s = 0; s < seg.sets; s++) {
           totalSets++;
           const ov = exData.setWeights && exData.setWeights[setNum] !== undefined
@@ -3551,9 +3735,12 @@ const App = {
     return { completedSets, totalSets, maxWeight, vol, reps, weights };
   },
 
-  roundWeight(weight) {
-    const step = this.data.weightStep || 0.5;
-    return Math.round(weight / step) * step;
+  roundWeight(weight, exercise = null) {
+    if (exercise && !this.isBarbellExercise(exercise)) {
+      const step = this.data.weightStep || 0.5;
+      return Math.round(weight / step) * step;
+    }
+    return this.getPlateLoad(weight).weight;
   },
 
   escapeHtml(str) {
